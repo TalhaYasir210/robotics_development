@@ -1,0 +1,10 @@
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/uninstall.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/go_to_pose_pkg_uninstall.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/first_publisher.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/test.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/edit_cache.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/rebuild_cache.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/list_install_components.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/install.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/install/local.dir
+/home/deadsec/robotics_development/build/go_to_pose_pkg/CMakeFiles/install/strip.dir
