@@ -42,5 +42,12 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+add_executable(controller_node src/controller_node.cpp)
+ament_target_dependencies(controller_node rclcpp geometry_msgs turtlesim)
+
+install(TARGETS
+  controller_node
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
