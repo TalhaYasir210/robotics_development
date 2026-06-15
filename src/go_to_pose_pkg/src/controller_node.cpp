@@ -27,8 +27,8 @@ public:
         // This is where you will add your math logic next!
         RCLCPP_INFO(this->get_logger(), "Current: x=%f, y=%f, theta=%f",current_pose_.x, current_pose_.y, current_pose_.theta); 
         // 1. Define your goal
-    double goal_x = 5.0;
-    double goal_y = 5.0;
+    double goal_x = 1.0;
+    double goal_y = 9.0;
 
     // 2. Calculate Distance to goal
     double dx = goal_x - current_pose_.x;
@@ -45,10 +45,14 @@ public:
     // 5. Basic Proportional Controller logic
     if (distance > 0.1) {
         msg.linear.x = 0.5 * distance; // Speed proportional to distance
-        msg.angular.z = 2.0 * angle_error; // Turn proportional to angle error
+        // Normalize angle_error to keep it between -PI and PI
+        while (angle_error > M_PI) angle_error -= 2 * M_PI;
+        while (angle_error < -M_PI) angle_error += 2 * M_PI;    
+        msg.angular.z = 4.0 * angle_error; // Turn proportional to angle error
     } else {
         msg.linear.x = 0.0;
         msg.angular.z = 0.0;
+        RCLCPP_INFO(this->get_logger(), "Goal reached!");
     }
 
     publisher_->publish(msg);
