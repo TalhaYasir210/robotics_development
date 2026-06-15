@@ -30,4 +30,17 @@ install(TARGETS
   first_publisher
   DESTINATION lib/${PROJECT_NAME}
 )
+
+add_executable(pose_subscriber src/pose_subscriber.cpp)
+
+# Define the dependencies for the subscriber
+ament_target_dependencies(pose_subscriber rclcpp turtlesim)
+
+# Tell ROS where to install the executable
+install(TARGETS
+  pose_subscriber
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+
 ament_package()

@@ -210,6 +210,19 @@ first_publisher/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/first_publisher.dir/build.make CMakeFiles/first_publisher.dir/build
 .PHONY : first_publisher/fast
 
+#=============================================================================
+# Target rules for targets named pose_subscriber
+
+# Build rule for target.
+pose_subscriber: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 pose_subscriber
+.PHONY : pose_subscriber
+
+# fast build rule for target.
+pose_subscriber/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pose_subscriber.dir/build.make CMakeFiles/pose_subscriber.dir/build
+.PHONY : pose_subscriber/fast
+
 src/first_publisher.o: src/first_publisher.cpp.o
 .PHONY : src/first_publisher.o
 
@@ -234,6 +247,30 @@ src/first_publisher.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/first_publisher.dir/build.make CMakeFiles/first_publisher.dir/src/first_publisher.cpp.s
 .PHONY : src/first_publisher.cpp.s
 
+src/pose_subscriber.o: src/pose_subscriber.cpp.o
+.PHONY : src/pose_subscriber.o
+
+# target to build an object file
+src/pose_subscriber.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pose_subscriber.dir/build.make CMakeFiles/pose_subscriber.dir/src/pose_subscriber.cpp.o
+.PHONY : src/pose_subscriber.cpp.o
+
+src/pose_subscriber.i: src/pose_subscriber.cpp.i
+.PHONY : src/pose_subscriber.i
+
+# target to preprocess a source file
+src/pose_subscriber.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pose_subscriber.dir/build.make CMakeFiles/pose_subscriber.dir/src/pose_subscriber.cpp.i
+.PHONY : src/pose_subscriber.cpp.i
+
+src/pose_subscriber.s: src/pose_subscriber.cpp.s
+.PHONY : src/pose_subscriber.s
+
+# target to generate assembly for a file
+src/pose_subscriber.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pose_subscriber.dir/build.make CMakeFiles/pose_subscriber.dir/src/pose_subscriber.cpp.s
+.PHONY : src/pose_subscriber.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -250,9 +287,13 @@ help:
 	@echo "... go_to_pose_pkg_uninstall"
 	@echo "... uninstall"
 	@echo "... first_publisher"
+	@echo "... pose_subscriber"
 	@echo "... src/first_publisher.o"
 	@echo "... src/first_publisher.i"
 	@echo "... src/first_publisher.s"
+	@echo "... src/pose_subscriber.o"
+	@echo "... src/pose_subscriber.i"
+	@echo "... src/pose_subscriber.s"
 .PHONY : help
 
 

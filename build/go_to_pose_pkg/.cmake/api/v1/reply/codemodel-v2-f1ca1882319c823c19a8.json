@@ -7,7 +7,7 @@
 				{
 					"build" : ".",
 					"hasInstallRule" : true,
-					"jsonFile" : "directory-.-ef97147debd7681a5675.json",
+					"jsonFile" : "directory-.-a9130b77e98788d14dd3.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.15"
@@ -18,7 +18,8 @@
 					[
 						0,
 						1,
-						2
+						2,
+						3
 					]
 				}
 			],
@@ -35,7 +36,8 @@
 					[
 						0,
 						1,
-						2
+						2,
+						3
 					]
 				}
 			],
@@ -53,6 +55,13 @@
 					"id" : "go_to_pose_pkg_uninstall::@6890427a1f51a3e7e1df",
 					"jsonFile" : "target-go_to_pose_pkg_uninstall-0f5785a5e393489f7d26.json",
 					"name" : "go_to_pose_pkg_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "pose_subscriber::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-pose_subscriber-9a0e81a67df395676f26.json",
+					"name" : "pose_subscriber",
 					"projectIndex" : 0
 				},
 				{

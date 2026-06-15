@@ -1,0 +1,27 @@
+[0.006s] Invoking command in '/home/deadsec/robotics_development/build/go_to_pose_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/deadsec/robotics_development/build/go_to_pose_pkg -- -j24 -l24
+[0.058s] [ 50%] Built target first_publisher
+[0.058s] [ 75%] [32mBuilding CXX object CMakeFiles/pose_subscriber.dir/src/pose_subscriber.cpp.o[0m
+[3.755s] [100%] [32m[1mLinking CXX executable pose_subscriber[0m
+[3.893s] [100%] Built target pose_subscriber
+[3.905s] Invoked command in '/home/deadsec/robotics_development/build/go_to_pose_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/deadsec/robotics_development/build/go_to_pose_pkg -- -j24 -l24
+[3.916s] Invoking command in '/home/deadsec/robotics_development/build/go_to_pose_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/deadsec/robotics_development/build/go_to_pose_pkg
+[3.927s] -- Install configuration: ""
+[3.927s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/lib/go_to_pose_pkg/first_publisher
+[3.927s] -- Installing: /home/deadsec/robotics_development/install/go_to_pose_pkg/lib/go_to_pose_pkg/pose_subscriber
+[3.929s] -- Set non-toolchain portion of runtime path of "/home/deadsec/robotics_development/install/go_to_pose_pkg/lib/go_to_pose_pkg/pose_subscriber" to ""
+[3.929s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/ament_index/resource_index/package_run_dependencies/go_to_pose_pkg
+[3.929s] -- Installing: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/ament_index/resource_index/parent_prefix_path/go_to_pose_pkg
+[3.929s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/environment/ament_prefix_path.sh
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/environment/ament_prefix_path.dsv
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/environment/path.sh
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/environment/path.dsv
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/local_setup.bash
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/local_setup.sh
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/local_setup.zsh
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/local_setup.dsv
+[3.930s] -- Installing: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/package.dsv
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/ament_index/resource_index/packages/go_to_pose_pkg
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/cmake/go_to_pose_pkgConfig.cmake
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/cmake/go_to_pose_pkgConfig-version.cmake
+[3.930s] -- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/package.xml
+[3.931s] Invoked command in '/home/deadsec/robotics_development/build/go_to_pose_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/deadsec/robotics_development/build/go_to_pose_pkg
