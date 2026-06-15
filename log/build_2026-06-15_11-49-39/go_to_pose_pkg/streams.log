@@ -1,0 +1,33 @@
+[0.007s] Invoking command in '/home/deadsec/robotics_development/build/go_to_pose_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/deadsec/robotics_development/build/go_to_pose_pkg -- -j24 -l24
+[0.032s] -- Found ament_cmake: 2.5.6 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.181s] -- Found rclcpp: 28.1.18 (/opt/ros/jazzy/share/rclcpp/cmake)
+[0.196s] -- Found rosidl_generator_c: 4.6.7 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[0.200s] -- Found rosidl_generator_cpp: 4.6.7 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[0.206s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.213s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.245s] -- Found rmw_implementation_cmake: 7.3.3 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[0.245s] -- Found rmw_fastrtps_cpp: 8.4.3 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+[0.300s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.336s] -- Found geometry_msgs: 5.3.7 (/opt/ros/jazzy/share/geometry_msgs/cmake)
+[0.352s] -- Found turtlesim: 1.8.3 (/opt/ros/jazzy/share/turtlesim/cmake)
+[0.379s] -- Found ament_lint_auto: 0.17.5 (/opt/ros/jazzy/share/ament_lint_auto/cmake)
+[0.429s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[0.429s] -- Configured cppcheck include dirs: 
+[0.429s] -- Configured cppcheck exclude dirs and/or files: 
+[0.429s] -- Added test 'lint_cmake' to check CMake code style
+[0.429s] -- Added test 'uncrustify' to check C / C++ code style
+[0.429s] -- Configured uncrustify additional arguments: 
+[0.430s] -- Added test 'xmllint' to check XML markup files
+[0.430s] -- Configuring done (0.4s)
+[0.438s] -- Generating done (0.0s)
+[0.440s] -- Build files have been written to: /home/deadsec/robotics_development/build/go_to_pose_pkg
+[0.475s] [ 25%] [32mBuilding CXX object CMakeFiles/pose_subscriber.dir/src/pose_subscriber.cpp.o[0m
+[0.482s] [ 75%] Built target first_publisher
+[2.385s] [100%] [32m[1mLinking CXX executable pose_subscriber[0m
+[2.509s] /usr/bin/ld: /usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/Scrt1.o: in function `_start':
+[2.509s] (.text+0x1b): undefined reference to `main'
+[2.511s] collect2: error: ld returned 1 exit status
+[2.513s] gmake[2]: *** [CMakeFiles/pose_subscriber.dir/build.make:185: pose_subscriber] Error 1
+[2.513s] gmake[1]: *** [CMakeFiles/Makefile2:165: CMakeFiles/pose_subscriber.dir/all] Error 2
+[2.513s] gmake: *** [Makefile:146: all] Error 2
+[2.515s] Invoked command in '/home/deadsec/robotics_development/build/go_to_pose_pkg' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/deadsec/robotics_development/build/go_to_pose_pkg -- -j24 -l24
