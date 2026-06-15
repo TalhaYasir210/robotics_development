@@ -223,6 +223,43 @@ pose_subscriber/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pose_subscriber.dir/build.make CMakeFiles/pose_subscriber.dir/build
 .PHONY : pose_subscriber/fast
 
+#=============================================================================
+# Target rules for targets named controller_node
+
+# Build rule for target.
+controller_node: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 controller_node
+.PHONY : controller_node
+
+# fast build rule for target.
+controller_node/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/controller_node.dir/build.make CMakeFiles/controller_node.dir/build
+.PHONY : controller_node/fast
+
+src/controller_node.o: src/controller_node.cpp.o
+.PHONY : src/controller_node.o
+
+# target to build an object file
+src/controller_node.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/controller_node.dir/build.make CMakeFiles/controller_node.dir/src/controller_node.cpp.o
+.PHONY : src/controller_node.cpp.o
+
+src/controller_node.i: src/controller_node.cpp.i
+.PHONY : src/controller_node.i
+
+# target to preprocess a source file
+src/controller_node.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/controller_node.dir/build.make CMakeFiles/controller_node.dir/src/controller_node.cpp.i
+.PHONY : src/controller_node.cpp.i
+
+src/controller_node.s: src/controller_node.cpp.s
+.PHONY : src/controller_node.s
+
+# target to generate assembly for a file
+src/controller_node.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/controller_node.dir/build.make CMakeFiles/controller_node.dir/src/controller_node.cpp.s
+.PHONY : src/controller_node.cpp.s
+
 src/first_publisher.o: src/first_publisher.cpp.o
 .PHONY : src/first_publisher.o
 
@@ -286,8 +323,12 @@ help:
 	@echo "... test"
 	@echo "... go_to_pose_pkg_uninstall"
 	@echo "... uninstall"
+	@echo "... controller_node"
 	@echo "... first_publisher"
 	@echo "... pose_subscriber"
+	@echo "... src/controller_node.o"
+	@echo "... src/controller_node.i"
+	@echo "... src/controller_node.s"
 	@echo "... src/first_publisher.o"
 	@echo "... src/first_publisher.i"
 	@echo "... src/first_publisher.s"

@@ -7,7 +7,7 @@
 				{
 					"build" : ".",
 					"hasInstallRule" : true,
-					"jsonFile" : "directory-.-a9130b77e98788d14dd3.json",
+					"jsonFile" : "directory-.-1ff80abf0848ab8bfe13.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.15"
@@ -19,7 +19,8 @@
 						0,
 						1,
 						2,
-						3
+						3,
+						4
 					]
 				}
 			],
@@ -37,12 +38,20 @@
 						0,
 						1,
 						2,
-						3
+						3,
+						4
 					]
 				}
 			],
 			"targets" : 
 			[
+				{
+					"directoryIndex" : 0,
+					"id" : "controller_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-controller_node-4435cd7aa7e35cd84116.json",
+					"name" : "controller_node",
+					"projectIndex" : 0
+				},
 				{
 					"directoryIndex" : 0,
 					"id" : "first_publisher::@6890427a1f51a3e7e1df",

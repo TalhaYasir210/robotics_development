@@ -773,4 +773,5 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/go_to_pose_pkg_uninstall.dir/DependInfo.cmake"
   "CMakeFiles/first_publisher.dir/DependInfo.cmake"
   "CMakeFiles/pose_subscriber.dir/DependInfo.cmake"
+  "CMakeFiles/controller_node.dir/DependInfo.cmake"
   )
