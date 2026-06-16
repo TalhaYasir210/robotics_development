@@ -1,0 +1,21 @@
+[ 50%] [32mBuilding CXX object CMakeFiles/first_publisher.dir/src/first_publisher.cpp.o[0m
+[100%] [32m[1mLinking CXX executable first_publisher[0m
+[100%] Built target first_publisher
+-- Install configuration: ""
+-- Installing: /home/deadsec/robotics_development/install/go_to_pose_pkg/lib/go_to_pose_pkg/first_publisher
+-- Set non-toolchain portion of runtime path of "/home/deadsec/robotics_development/install/go_to_pose_pkg/lib/go_to_pose_pkg/first_publisher" to ""
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/ament_index/resource_index/package_run_dependencies/go_to_pose_pkg
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/ament_index/resource_index/parent_prefix_path/go_to_pose_pkg
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/environment/ament_prefix_path.sh
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/environment/ament_prefix_path.dsv
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/environment/path.sh
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/environment/path.dsv
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/local_setup.bash
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/local_setup.sh
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/local_setup.zsh
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/local_setup.dsv
+-- Installing: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/package.dsv
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/ament_index/resource_index/packages/go_to_pose_pkg
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/cmake/go_to_pose_pkgConfig.cmake
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/cmake/go_to_pose_pkgConfig-version.cmake
+-- Up-to-date: /home/deadsec/robotics_development/install/go_to_pose_pkg/share/go_to_pose_pkg/package.xml
