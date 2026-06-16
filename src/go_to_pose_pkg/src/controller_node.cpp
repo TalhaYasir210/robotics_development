@@ -12,7 +12,7 @@ public:
     {
         this->declare_parameter("target_x", 5.0);
         this->declare_parameter("target_y", 5.0);
-        this->declare_parameter("target_theta", 0.0); // New parameter
+        this->declare_parameter("target_theta", 0.0);
         
         publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
         subscription_ = this->create_subscription<turtlesim::msg::Pose>(
@@ -35,6 +35,13 @@ private:
         double goal_y = this->get_parameter("target_y").as_double();
         double target_theta = this->get_parameter("target_theta").as_double();
 
+        // 1. Validation: Shutdown on negative input
+        if (goal_x < 0 || goal_y < 0) {
+            RCLCPP_ERROR(this->get_logger(), "Invalid input: Coordinates must be positive! Shutting down.");
+            rclcpp::shutdown();
+            return;
+        }
+
         auto msg = geometry_msgs::msg::Twist();
 
         switch (current_state_) {
@@ -45,9 +52,12 @@ private:
                     double distance = std::sqrt(dx * dx + dy * dy);
                     double angle_error = std::atan2(dy, dx) - current_pose_.theta;
                     
-                    // Normalize
                     while (angle_error > M_PI) angle_error -= 2 * M_PI;
                     while (angle_error < -M_PI) angle_error += 2 * M_PI;
+
+                    // Debugging Telemetry
+                    RCLCPP_DEBUG(this->get_logger(), "Pose: [x:%.2f, y:%.2f, θ:%.2f] | Dist: %.2f | AngErr: %.2f", 
+                                 current_pose_.x, current_pose_.y, current_pose_.theta, distance, angle_error);
 
                     if (distance > 0.1) {
                         msg.linear.x = 0.5 * distance;
