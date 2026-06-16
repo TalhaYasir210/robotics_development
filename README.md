@@ -1,74 +1,53 @@
 TurtleBot Go-To-Pose Controller
-
-A robust ROS 2 C++ node for turtlesim that navigates the turtle to specific (x,y) coordinates and adjusts its orientation (θ) using a multi-stage state machine.
-Features
-
-    State Machine Logic: Navigates to target coordinates first, then adjusts orientation.
-
-    Input Validation: Automatically detects negative coordinate inputs and shuts down safely.
-
-    Debug Telemetry: Built-in DEBUG level logging for real-time tracking of pose, distance, and angle error.
-
-    Auto-Termination: Gracefully shuts down the node once the mission is accomplished.
-
 Prerequisites
+Before building, ensure the following tools and libraries are installed on your system:
 
-    ROS 2 (Humble or newer recommended)
-
-    turtlesim package installed:
-    Bash
-
-    sudo apt install ros-<distro>-turtlesim
-
-Build Instructions
-
-    Navigate to your workspace root:
-    Bash
-
-    cd ~/robotics_development
-
-    Build the package:
-    Bash
-
+    ROS 2: (Humble, Jazzy, or newer)
+    
+    turtlesim: Required for simulation.
+    
+    colcon: The ROS 2 build tool (python3-colcon-common-extensions).
+    
+    rosdep: For automatic dependency resolution.
+    
+    python3-pip and python3-setuptools: Required for Python-based ROS package compilation.
+    
+Step 3: Project Installation
+Now, follow these commands exactly to set up the project folder:
+    
+    mkdir -p ~/go_to_pose_turtlesim_project
+    
+    git clone --branch p1_gotopose https://github.com/TalhaYasir210/robotics_development.git  go_to_pose_turtlesim_project
+    
+    cd go_to_pose_turtlesim_project
+    
     colcon build --packages-select go_to_pose_pkg
-
-    Source your workspace:
-    Bash
-
+    
     source install/setup.bash
-
-How to Run
-1. Launch Turtlesim
-
-Open a new terminal and run:
-Bash
-
-ros2 run turtlesim turtlesim_node
-
-2. Run the Controller
-
-Open another terminal, source your workspace, and run the controller node:
-
-Standard Run (Silent):
-Bash
-
-ros2 run go_to_pose_pkg controller_node --ros-args -p target_x:=8.0 -p target_y:=2.0 -p target_theta:=1.57
+    
+    open turtlesim:open new terminal -> paste the cammand -> ros2 run turtlesim turtlesim_node
+    
+    To run the code -> open first terminal -> paste this cammand (note: Value of target_x, target_y & target_theta can be set according to your own desires)-> ros2 run go_to_pose_pkg controller_node --ros-args -p target_x:=8.0 -p target_y:=2.0 -p target_theta:=1.57
 
 Debug Run (To see telemetry):
 If you want to see the real-time distance and angle error calculations, add the --log-level debug flag:
 Bash
 
-ros2 run go_to_pose_pkg controller_node --ros-args --log-level debug -p target_x:=8.0 -p target_y:=2.0 -p target_theta:=1.57
+    ros2 run go_to_pose_pkg controller_node --ros-args --log-level debug -p target_x:=8.0 -p target_y:=2.0 -p target_theta:=1.57
 
-Parameters
+
+Parameters:
 Parameter	Description	Default
 target_x	Goal X-coordinate	5.0
 target_y	Goal Y-coordinate	5.0
 target_theta	Final goal orientation (radians)	0.0
-Troubleshooting
+
+Troubleshooting:
 
     "Package not found": Ensure you have run source install/setup.bash in the terminal where you are running the command.
 
     Negative Inputs: If you provide negative coordinates, the node will print an error and shut down immediately to prevent unwanted movement.
 
     Teleop Conflicts: If you want to use your keyboard to move the turtle, ensure you are not running this controller node, as they will compete for control of /turtle1/cmd_vel.
+
+  
