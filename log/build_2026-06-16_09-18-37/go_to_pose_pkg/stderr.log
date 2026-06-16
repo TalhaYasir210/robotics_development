@@ -1,7 +1,0 @@
-[01m[K/home/deadsec/robotics_development/src/go_to_pose_pkg/src/controller_node.cpp:[m[K In constructor ‘[01m[KControllerNode::[01;32m[KControllerNode[m[K()[m[K’:
-[01m[K/home/deadsec/robotics_development/src/go_to_pose_pkg/src/controller_node.cpp:24:56:[m[K [01;31m[Kerror: [m[Ka function-definition is not allowed here before ‘[01m[K{[m[K’ token
-   24 |         void log_telemetry(const std::string &message) [01;31m[K{[m[K
-      |                                                        [01;31m[K^[m[K
-gmake[2]: *** [CMakeFiles/controller_node.dir/build.make:76: CMakeFiles/controller_node.dir/src/controller_node.cpp.o] Error 1
-gmake[1]: *** [CMakeFiles/Makefile2:193: CMakeFiles/controller_node.dir/all] Error 2
-gmake: *** [Makefile:146: all] Error 2
