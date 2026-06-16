@@ -35,6 +35,11 @@ private:
         double goal_x = this->get_parameter("target_x").as_double();
         double goal_y = this->get_parameter("target_y").as_double();
 
+        if (goal_x < 0 || goal_y < 0) {
+        RCLCPP_ERROR_THROTTLE(this->get_logger(), *this->get_clock(), 5000, "Invalid goal! Coordinates must be positive.");
+        return; // Stop the function here, turtle won't move
+        }
+
         // 2. Calculate Distance to goal
         double dx = goal_x - current_pose_.x;
         double dy = goal_y - current_pose_.y;
