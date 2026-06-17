@@ -35,6 +35,21 @@ private:
         double goal_y = this->get_parameter("target_y").as_double();
         double target_theta = this->get_parameter("target_theta").as_double();
 
+        // 1. Defined Limits
+        const double MAX_XY = 11.0;
+        const double MIN_THETA = -M_PI;
+        const double MAX_THETA = M_PI;
+        // 2. Comprehensive Validation
+        if (goal_x < 0 || goal_x > MAX_XY || goal_y < 0 || goal_y > MAX_XY || 
+            target_theta < MIN_THETA || target_theta > MAX_THETA) {
+            
+            RCLCPP_ERROR(this->get_logger(), "Input out of bounds!");
+            RCLCPP_INFO(this->get_logger(), "Limits -> X,Y: [0.0, %.1f] | Theta: [%.2f, %.2f]", 
+                        MAX_XY, MIN_THETA, MAX_THETA);
+            
+            rclcpp::shutdown();
+            return;
+        }
         // 1. Validation: Shutdown on negative input
         if (goal_x < 0 || goal_y < 0) {
             RCLCPP_ERROR(this->get_logger(), "Invalid input: Coordinates must be positive! Shutting down.");
