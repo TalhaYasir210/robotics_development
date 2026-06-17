@@ -23,24 +23,24 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(first_publisher src/first_publisher.cpp)
-ament_target_dependencies(first_publisher rclcpp geometry_msgs)
+# add_executable(first_publisher src/first_publisher.cpp)
+# ament_target_dependencies(first_publisher rclcpp geometry_msgs)
 
-install(TARGETS
-  first_publisher
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(TARGETS
+#   first_publisher
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
-add_executable(pose_subscriber src/pose_subscriber.cpp)
+# add_executable(pose_subscriber src/pose_subscriber.cpp)
 
-# Define the dependencies for the subscriber
-ament_target_dependencies(pose_subscriber rclcpp turtlesim)
+# # Define the dependencies for the subscriber
+# ament_target_dependencies(pose_subscriber rclcpp turtlesim)
 
 # Tell ROS where to install the executable
-install(TARGETS
-  pose_subscriber
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(TARGETS
+#   pose_subscriber
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 add_executable(controller_node src/controller_node.cpp)
 ament_target_dependencies(controller_node rclcpp geometry_msgs turtlesim)
