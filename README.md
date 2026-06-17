@@ -49,20 +49,11 @@ The turtle will start moving toward the goal coordinate while tracing its path l
 <img width="500" height="500" alt="3 mov_to_goal" src="https://github.com/user-attachments/assets/4a760cca-e52a-4e15-bc1e-434fe2430013" />
 
 
-   (B) After reaching the goal coordinates, turtle will start adjusting its head to match target_theta like this.
+ (B) After reaching the goal coordinates, turtle will start adjusting its head to match target_theta like this.
 <img width="500" height="500" alt="4 reachedGoal_adjust_GoalAngle" src="https://github.com/user-attachments/assets/ad56096b-92de-44cc-89b0-1fa079eefba3" />
 
 
 (C) After Reaching the desired goal and angle Terminal will give feedback confirming the mission is accomplished and the node has shut down.
-
-(D) Running the command again with new coordinates to perform a different mission.
-
-(E) The turtle calculating a new path based on the updated coordinates.
-<img width="500" height="500" alt="7 again going to goal" src="https://github.com/user-attachments/assets/9e698059-5dfe-4739-9afc-804c6705a17c" />
-
- 
-(F) The turtle reaching the new coordinates and adjust its head according to the target_theta provided.
-<img width="500" height="500" alt="8 again adjustting the angle after reached goal" src="https://github.com/user-attachments/assets/7b64fa78-0d99-462f-b28c-f99644cdb3ff" />
 
 ***NOTE (A) Error message triggered when providing a negative coordinate value (target_y := -4.0) or beyond the limit, Log msg is also displyaed to highlight the limits of input values.
    (B) Error message triggered when providing a coordinate value exceeding the map limit (target_y := 14.0).***
