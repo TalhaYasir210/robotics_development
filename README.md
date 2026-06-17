@@ -19,14 +19,15 @@ A robust ROS 2 C++ node for turtlesim that navigates the turtle to specific (x,y
 #### Step by Step Execution: (Follow these commands exactly to set up and run the controller)
 1. open terminal by pressing (ctrl+Alt+T) and paste the following command to create a new ROS 2 workspace
 ```bash
-mkdir -p ~/ros2_ws/src && cd ~/ros2_ws
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
 ```
 2. In the same terminal paste the following command to clone the project repository
 ```bash
-git clone --single-branch --branch gotopose  --depth  https://github.com/TalhaYasir210/robotics_development.git
+git clone https://github.com/TalhaYasir210/robotics_development.git
 ```
 3. In the same terminal paste the following command to compile the cloned pacakge
 ```bash
+cd ../..
 colcon build --packages-select go_to_pose_pkg
 ```
 4. in the same terminal paste the following command to Load environment
