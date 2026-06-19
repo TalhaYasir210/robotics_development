@@ -15,9 +15,23 @@ public:
         this->declare_parameter("goal_x", 2.0);
         this->declare_parameter("goal_y", 0.5);
 
-        // Fetch the parameters
+        // 1. FETCH THE PARAMETERS FIRST
         goal_x_ = this->get_parameter("goal_x").as_double();
         goal_y_ = this->get_parameter("goal_y").as_double();
+
+        // --- 🚨 YOUR CUSTOM GEO-FENCE (WITH INFLATION) 🚨 ---
+        double x_min = -0.16; 
+        double x_max = 3.90;
+        double y_min = -1.48; 
+        double y_max = 2.46;
+
+        // 2. THEN CHECK THE LIMITS
+        if (goal_x_ < x_min || goal_x_ > x_max || goal_y_ < y_min || goal_y_ > y_max) {
+            RCLCPP_ERROR(this->get_logger(), "MISSION ABORTED: Target (%.2f, %.2f) is outside the Safe Zone!", goal_x_, goal_y_);
+            RCLCPP_INFO(this->get_logger(), "SAFE LIMITS: X [%.2f to %.2f] | Y [%.2f to %.2f]", x_min, x_max, y_min, y_max);
+            rclcpp::shutdown(); 
+            return; 
+        }
 
         publisher_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/cmd_vel", 10);
         
@@ -28,6 +42,19 @@ public:
             "/scan", 10, std::bind(&ObstacleAvoidanceNode::scan_callback, this, _1));
         
         RCLCPP_INFO(this->get_logger(), "Advanced FSM Autonomy Engaged. Target Acquired: X=%.2f, Y=%.2f", goal_x_, goal_y_);
+    }
+
+    // --- 🛑 EMERGENCY BRAKES (DESTRUCTOR) 🛑 ---
+    ~ObstacleAvoidanceNode() {
+        RCLCPP_WARN(this->get_logger(), "Node shutting down. Slamming on the brakes...");
+        if (publisher_) {
+            auto stop_msg = geometry_msgs::msg::TwistStamped();
+            stop_msg.header.stamp = this->get_clock()->now(); 
+            stop_msg.header.frame_id = "base_link";
+            stop_msg.twist.linear.x = 0.0;
+            stop_msg.twist.angular.z = 0.0;
+            publisher_->publish(stop_msg);
+        }
     }
 
 private:
@@ -76,7 +103,6 @@ private:
             float d = msg->ranges[i];
             if (std::isinf(d) || std::isnan(d) || d == 0.0) d = 10.0; 
 
-            // Slightly wider front cone to prevent clipping during recovery
             if (i <= 25 || i >= 335) {
                 if (d < min_front) min_front = d;
             } else if (i > 25 && i <= 90) {
@@ -89,50 +115,44 @@ private:
         float avg_left = (count_left > 0) ? (sum_left / count_left) : 0.0;
         float avg_right = (count_right > 0) ? (sum_right / count_right) : 0.0;
 
-        float danger_distance = 0.50; 
-        float clear_distance = 0.65;  
+        float danger_distance = 0.30; 
+        float clear_distance = 0.45;  
 
         // --- STATE TRANSITIONS ---
         double distance_to_goal = std::hypot(goal_x_ - current_x_, goal_y_ - current_y_);
 
-        // 1. TERMINAL STATES: Locked in
         if (current_mode_ == Mode::ARRIVED || current_mode_ == Mode::BLOCKED) {
-            // Do nothing, maintain locked state
+            // Locked state
         }
-        // 2. SUCCESS CHECK
         else if (distance_to_goal < 0.2) {
             current_mode_ = Mode::ARRIVED;
             RCLCPP_INFO_ONCE(this->get_logger(), "MISSION ACCOMPLISHED: Arrived at Target.");
         }
-        // 3. ABORT CHECK: Goal is inside an obstacle
-        else if (distance_to_goal < 0.65 && min_front < danger_distance) {
+        else if (distance_to_goal < 0.55 && min_front < danger_distance) {
             current_mode_ = Mode::BLOCKED;
             RCLCPP_ERROR_ONCE(this->get_logger(), "MISSION ABORTED: Target coordinate is inside an obstacle!");
         }
-        // 4. NORMAL TRACKING
         else if (current_mode_ == Mode::TRACKING) {
             if (min_front < danger_distance) {
                 current_mode_ = Mode::DODGING;
                 is_turning_left_ = (avg_left > avg_right);
-                RCLCPP_WARN(this->get_logger(), "Obstacle detected. Initiating dodge maneuver.");
+                RCLCPP_WARN(this->get_logger(), "Obstacle detected. Dodge maneuver engaged.");
             }
         } 
-        // 5. DODGING
         else if (current_mode_ == Mode::DODGING) {
             if (min_front > clear_distance) {
                 current_mode_ = Mode::RECOVERING;
-                recovery_ticks_ = 15; // Drive straight for 1.5s
-                RCLCPP_INFO(this->get_logger(), "Gap found. Pushing through to clear obstacle...");
+                recovery_ticks_ = 15; 
+                RCLCPP_INFO(this->get_logger(), "Gap found. Pushing through...");
             }
         } 
-        // 6. RECOVERING
         else if (current_mode_ == Mode::RECOVERING) {
             recovery_ticks_--;
             if (min_front < danger_distance) {
-                current_mode_ = Mode::DODGING; // Hit another wall, go back to dodging
+                current_mode_ = Mode::DODGING;
                 is_turning_left_ = (avg_left > avg_right);
             } else if (recovery_ticks_ <= 0) {
-                current_mode_ = Mode::TRACKING; // Cleared! Look for goal again
+                current_mode_ = Mode::TRACKING;
                 RCLCPP_INFO(this->get_logger(), "Obstacle cleared. Re-acquiring target.");
             }
         }
@@ -157,11 +177,31 @@ private:
             while (angle_error > M_PI) angle_error -= 2.0 * M_PI;
             while (angle_error < -M_PI) angle_error += 2.0 * M_PI;
 
-            twist_msg.twist.linear.x = 0.2; 
-            twist_msg.twist.angular.z = std::clamp(0.6 * angle_error, -0.5, 0.5); 
+            // --- NATIVE ROS 2 DEBUG LOG ---
+            // View this by appending: --log-level debug
+            static int tick = 0;
+            if (tick++ % 5 == 0) { 
+                RCLCPP_DEBUG(this->get_logger(), "Live -> Pose: [X:%.2f, Y:%.2f] | Dist: %.2fm | AngErr: %.2frad", 
+                            current_x_, current_y_, distance_to_goal, angle_error);
+            }
+
+            // --- THE PIVOT FIX ---
+            if (std::abs(angle_error) > 0.3) {
+                twist_msg.twist.linear.x = 0.0; 
+                twist_msg.twist.angular.z = std::clamp(0.8 * angle_error, -0.5, 0.5); 
+            } else {
+                twist_msg.twist.linear.x = 0.2; 
+                twist_msg.twist.angular.z = std::clamp(0.6 * angle_error, -0.5, 0.5); 
+            }
         }
 
         publisher_->publish(twist_msg);
+
+        // --- 🔌 AUTOMATIC SHUTDOWN TRIGGER 🔌 ---
+        if (current_mode_ == Mode::ARRIVED || current_mode_ == Mode::BLOCKED) {
+            RCLCPP_INFO(this->get_logger(), "Task Concluded. Auto-shutting down node to free terminal.");
+            rclcpp::shutdown();
+        }
     }
 
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
