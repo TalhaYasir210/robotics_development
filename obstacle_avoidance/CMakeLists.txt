@@ -10,13 +10,17 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-
+find_package(nav_msgs REQUIRED)
 # --- Add this block ---
 add_executable(lidar_subscriber src/lidar_subscriber.cpp)
 ament_target_dependencies(lidar_subscriber rclcpp sensor_msgs)
 
+add_executable(obstacle_avoidance_node src/obstacle_avoidance_node.cpp)
+ament_target_dependencies(obstacle_avoidance_node rclcpp sensor_msgs geometry_msgs)
+ament_target_dependencies(obstacle_avoidance_node rclcpp sensor_msgs geometry_msgs nav_msgs)
 install(TARGETS
   lidar_subscriber
+  obstacle_avoidance_node
   DESTINATION lib/${PROJECT_NAME}
 )
 if(BUILD_TESTING)
