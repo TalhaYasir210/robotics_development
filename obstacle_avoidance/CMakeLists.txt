@@ -18,9 +18,14 @@ ament_target_dependencies(lidar_subscriber rclcpp sensor_msgs)
 add_executable(obstacle_avoidance_node src/obstacle_avoidance_node.cpp)
 ament_target_dependencies(obstacle_avoidance_node rclcpp sensor_msgs geometry_msgs)
 ament_target_dependencies(obstacle_avoidance_node rclcpp sensor_msgs geometry_msgs nav_msgs)
+
+
+add_executable(boundary_surveyor_node src/boundary_surveyor_node.cpp)
+ament_target_dependencies(boundary_surveyor_node rclcpp nav_msgs sensor_msgs geometry_msgs)
 install(TARGETS
   lidar_subscriber
   obstacle_avoidance_node
+  boundary_surveyor_node
   DESTINATION lib/${PROJECT_NAME}
 )
 if(BUILD_TESTING)
