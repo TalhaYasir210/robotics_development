@@ -1,0 +1,217 @@
+#include <memory>
+#include <cmath>
+#include <algorithm> // Required for std::clamp
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
+
+using std::placeholders::_1;
+
+class ObstacleAvoidanceNode : public rclcpp::Node {
+public:
+    ObstacleAvoidanceNode() : Node("obstacle_avoidance_node") {
+        // --- DECLARE ROS 2 PARAMETERS ---
+        this->declare_parameter("goal_x", 2.0);
+        this->declare_parameter("goal_y", 0.5);
+
+        // 1. FETCH THE PARAMETERS FIRST
+        goal_x_ = this->get_parameter("goal_x").as_double();
+        goal_y_ = this->get_parameter("goal_y").as_double();
+
+        // --- 🚨 YOUR CUSTOM GEO-FENCE (WITH INFLATION) 🚨 ---
+        double x_min = -0.16; 
+        double x_max = 3.90;
+        double y_min = -1.48; 
+        double y_max = 2.46;
+
+        // 2. THEN CHECK THE LIMITS
+        if (goal_x_ < x_min || goal_x_ > x_max || goal_y_ < y_min || goal_y_ > y_max) {
+            RCLCPP_ERROR(this->get_logger(), "MISSION ABORTED: Target (%.2f, %.2f) is outside the Safe Zone!", goal_x_, goal_y_);
+            RCLCPP_INFO(this->get_logger(), "SAFE LIMITS: X [%.2f to %.2f] | Y [%.2f to %.2f]", x_min, x_max, y_min, y_max);
+            rclcpp::shutdown(); 
+            return; 
+        }
+
+        publisher_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/cmd_vel", 10);
+        
+        odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+            "/odom", 10, std::bind(&ObstacleAvoidanceNode::odom_callback, this, _1));
+
+        scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+            "/scan", 10, std::bind(&ObstacleAvoidanceNode::scan_callback, this, _1));
+        
+        RCLCPP_INFO(this->get_logger(), "Advanced FSM Autonomy Engaged. Target Acquired: X=%.2f, Y=%.2f", goal_x_, goal_y_);
+    }
+
+    // --- 🛑 EMERGENCY BRAKES (DESTRUCTOR) 🛑 ---
+    ~ObstacleAvoidanceNode() {
+        RCLCPP_WARN(this->get_logger(), "Node shutting down. Slamming on the brakes...");
+        if (publisher_) {
+            auto stop_msg = geometry_msgs::msg::TwistStamped();
+            stop_msg.header.stamp = this->get_clock()->now(); 
+            stop_msg.header.frame_id = "base_link";
+            stop_msg.twist.linear.x = 0.0;
+            stop_msg.twist.angular.z = 0.0;
+            publisher_->publish(stop_msg);
+        }
+    }
+
+private:
+    double current_x_ = 0.0;
+    double current_y_ = 0.0;
+    double current_yaw_ = 0.0;
+    bool odom_received_ = false; 
+    
+    double goal_x_ = 0.0; 
+    double goal_y_ = 0.0;
+
+    // --- UPGRADED 5-STATE FSM ---
+    enum class Mode { TRACKING, DODGING, RECOVERING, ARRIVED, BLOCKED };
+    Mode current_mode_ = Mode::TRACKING;
+    
+    bool is_turning_left_ = false;
+    int recovery_ticks_ = 0;
+
+    void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
+        current_x_ = msg->pose.pose.position.x;
+        current_y_ = msg->pose.pose.position.y;
+
+        double qx = msg->pose.pose.orientation.x;
+        double qy = msg->pose.pose.orientation.y;
+        double qz = msg->pose.pose.orientation.z;
+        double qw = msg->pose.pose.orientation.w;
+        current_yaw_ = std::atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
+
+        odom_received_ = true; 
+    }
+
+    void scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
+        if (!odom_received_) return; 
+        
+        auto twist_msg = geometry_msgs::msg::TwistStamped();
+        twist_msg.header.stamp = this->get_clock()->now();
+        twist_msg.header.frame_id = "base_link";
+
+        float min_front = 10.0;
+        float sum_left = 0.0;
+        int count_left = 0;
+        float sum_right = 0.0;
+        int count_right = 0;
+
+        for (size_t i = 0; i < msg->ranges.size(); i++) {
+            float d = msg->ranges[i];
+            if (std::isinf(d) || std::isnan(d) || d == 0.0) d = 10.0; 
+
+            if (i <= 25 || i >= 335) {
+                if (d < min_front) min_front = d;
+            } else if (i > 25 && i <= 90) {
+                sum_left += d; count_left++;
+            } else if (i >= 270 && i < 335) {
+                sum_right += d; count_right++;
+            }
+        }
+
+        float avg_left = (count_left > 0) ? (sum_left / count_left) : 0.0;
+        float avg_right = (count_right > 0) ? (sum_right / count_right) : 0.0;
+
+        float danger_distance = 0.30; 
+        float clear_distance = 0.45;  
+
+        // --- STATE TRANSITIONS ---
+        double distance_to_goal = std::hypot(goal_x_ - current_x_, goal_y_ - current_y_);
+
+        if (current_mode_ == Mode::ARRIVED || current_mode_ == Mode::BLOCKED) {
+            // Locked state
+        }
+        else if (distance_to_goal < 0.2) {
+            current_mode_ = Mode::ARRIVED;
+            RCLCPP_INFO_ONCE(this->get_logger(), "MISSION ACCOMPLISHED: Arrived at Target.");
+        }
+        else if (distance_to_goal < 0.55 && min_front < danger_distance) {
+            current_mode_ = Mode::BLOCKED;
+            RCLCPP_ERROR_ONCE(this->get_logger(), "MISSION ABORTED: Target coordinate is inside an obstacle!");
+        }
+        else if (current_mode_ == Mode::TRACKING) {
+            if (min_front < danger_distance) {
+                current_mode_ = Mode::DODGING;
+                is_turning_left_ = (avg_left > avg_right);
+                RCLCPP_WARN(this->get_logger(), "Obstacle detected. Dodge maneuver engaged.");
+            }
+        } 
+        else if (current_mode_ == Mode::DODGING) {
+            if (min_front > clear_distance) {
+                current_mode_ = Mode::RECOVERING;
+                recovery_ticks_ = 15; 
+                RCLCPP_INFO(this->get_logger(), "Gap found. Pushing through...");
+            }
+        } 
+        else if (current_mode_ == Mode::RECOVERING) {
+            recovery_ticks_--;
+            if (min_front < danger_distance) {
+                current_mode_ = Mode::DODGING;
+                is_turning_left_ = (avg_left > avg_right);
+            } else if (recovery_ticks_ <= 0) {
+                current_mode_ = Mode::TRACKING;
+                RCLCPP_INFO(this->get_logger(), "Obstacle cleared. Re-acquiring target.");
+            }
+        }
+
+        // --- MOVEMENT EXECUTION ---
+        if (current_mode_ == Mode::ARRIVED || current_mode_ == Mode::BLOCKED) {
+            twist_msg.twist.linear.x = 0.0;
+            twist_msg.twist.angular.z = 0.0;
+        } 
+        else if (current_mode_ == Mode::DODGING) {
+            twist_msg.twist.linear.x = 0.0; 
+            twist_msg.twist.angular.z = is_turning_left_ ? 0.6 : -0.6; 
+        } 
+        else if (current_mode_ == Mode::RECOVERING) {
+            twist_msg.twist.linear.x = 0.25; 
+            twist_msg.twist.angular.z = 0.0; 
+        }
+        else if (current_mode_ == Mode::TRACKING) {
+            double angle_to_goal = std::atan2(goal_y_ - current_y_, goal_x_ - current_x_);
+            double angle_error = angle_to_goal - current_yaw_;
+            
+            while (angle_error > M_PI) angle_error -= 2.0 * M_PI;
+            while (angle_error < -M_PI) angle_error += 2.0 * M_PI;
+
+            // --- NATIVE ROS 2 DEBUG LOG ---
+            // View this by appending: --log-level debug
+            static int tick = 0;
+            if (tick++ % 5 == 0) { 
+                RCLCPP_DEBUG(this->get_logger(), "Live -> Pose: [X:%.2f, Y:%.2f] | Dist: %.2fm | AngErr: %.2frad", 
+                            current_x_, current_y_, distance_to_goal, angle_error);
+            }
+
+            // --- THE PIVOT FIX ---
+            if (std::abs(angle_error) > 0.3) {
+                twist_msg.twist.linear.x = 0.0; 
+                twist_msg.twist.angular.z = std::clamp(0.8 * angle_error, -0.5, 0.5); 
+            } else {
+                twist_msg.twist.linear.x = 0.2; 
+                twist_msg.twist.angular.z = std::clamp(0.6 * angle_error, -0.5, 0.5); 
+            }
+        }
+
+        publisher_->publish(twist_msg);
+
+        // --- 🔌 AUTOMATIC SHUTDOWN TRIGGER 🔌 ---
+        if (current_mode_ == Mode::ARRIVED || current_mode_ == Mode::BLOCKED) {
+            RCLCPP_INFO(this->get_logger(), "Task Concluded. Auto-shutting down node to free terminal.");
+            rclcpp::shutdown();
+        }
+    }
+
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
+};
+
+int main(int argc, char * argv[]) {
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<ObstacleAvoidanceNode>());
+    rclcpp::shutdown();
+    return 0;
+}
