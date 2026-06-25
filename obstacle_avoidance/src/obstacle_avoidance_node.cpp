@@ -178,9 +178,9 @@ private:
         publisher_->publish(current_cmd_msg_);
 
         // 4. LiDAR Regions
-        current_front_scan_.header.stamp = now;
-        current_left_scan_.header.stamp = now;
-        current_right_scan_.header.stamp = now;
+        // Removed overwriting the timestamp with now(). This breaks RViz TF lookups 
+        // because now() is slightly ahead of the TF tree, causing RViz to drop the scans!
+        // The scans will now retain their original, perfectly-synced Gazebo timestamps.
         scan_front_pub_->publish(current_front_scan_);
         scan_left_pub_->publish(current_left_scan_);
         scan_right_pub_->publish(current_right_scan_);
