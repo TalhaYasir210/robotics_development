@@ -3,6 +3,29 @@
 ### About This Repository
 modular ROS 2 C++ architecture for the TurtleBot3 (Waffle model) that navigates to specific (x,y) coordinates within a Gazebo simulation while dynamically avoiding obstacles.
 
+### Prerequisites
+- ROS 2 (Jazzy)
+- Gazebo Simulator & TurtleBot3 Packages
+- colcon build tools
+
+### Expected Output
+Phase 1: Tracking & Pivoting
+After receiving target values, the TurtleBot will calculate the angle error. If the target is not directly in front of it, it will strictly pivot in place to minimize the angle error before driving forward.
+
+Phase 2: Dodging & Recovering
+If a wall or obstacle enters the front Lidar cone, the robot will automatically steer away, find a clear gap, push through it, and then re-acquire the target to continue its journey.
+
+Phase 3: Arrived
+After reaching the goal coordinates within a 0.2m threshold, the node logs a success message and stops driving.
+
+---
+
+### Flowchart
+for basic understaning of the working of the porject take a look of the flowchart below
+
+<img width="6115" height="2520" alt="modular_obstacle_avoidance workflow " src="https://github.com/user-attachments/assets/d2f0447c-416e-4eb0-838f-4fd46e6e86ba" />
+
+
 ### Architecture Overview (How it Works)
 To make the robot intelligent and easy to maintain, the code is split into four distinct components. Here is a simple breakdown of how they work together to control the robot:
 
@@ -21,23 +44,6 @@ The *Autonomy Finite State Machine (FSM)* is the robot's decision-making center.
 
 #### 4. The Muscles (`motion_controller.cpp`)
 Once the *Brain* decides what mode the robot should be in, the *Motion Controller* takes over to figure out the exact physical wheel speeds needed to execute that decision. If the brain says "Tracking", the muscles calculate exactly how hard to spin the wheels to smoothly pivot toward the goal and drive forward. If the brain says "Dodging", the muscles steer the wheels sharply away from the nearest wall.
-
----
-
-### Prerequisites
-- ROS 2 (Jazzy)
-- Gazebo Simulator & TurtleBot3 Packages
-- colcon build tools
-
-### Expected Output
-Phase 1: Tracking & Pivoting
-After receiving target values, the TurtleBot will calculate the angle error. If the target is not directly in front of it, it will strictly pivot in place to minimize the angle error before driving forward.
-
-Phase 2: Dodging & Recovering
-If a wall or obstacle enters the front Lidar cone, the robot will automatically steer away, find a clear gap, push through it, and then re-acquire the target to continue its journey.
-
-Phase 3: Arrived
-After reaching the goal coordinates within a 0.2m threshold, the node logs a success message and stops driving.
 
 ---
 
