@@ -1,217 +1,298 @@
 #include <memory>
-#include <cmath>
-#include <algorithm> // Required for std::clamp
+#include <chrono>
+#include <thread>
+#include <signal.h> 
+#include <sstream>
+#include <iomanip>
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/qos.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include "geometry_msgs/msg/point_stamped.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/string.hpp"
+
+#include "sensor_processor.hpp"
+#include "autonomy_fsm.hpp"
+#include "motion_controller.hpp"
 
 using std::placeholders::_1;
+
+rclcpp::Node::SharedPtr g_node = nullptr;
+rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr g_publisher = nullptr;
+bool g_is_shutting_down = false; 
+
+void sigint_handler(int sig) {
+    (void)sig; 
+    
+    if (g_is_shutting_down) return;
+    g_is_shutting_down = true;
+
+    if (g_node && g_publisher) {
+        RCLCPP_WARN(g_node->get_logger(), "🛑 EMERGENCY BRAKE ENGAGED: Forcing wheels to [0.0, 0.0] before network death...");
+        
+        auto stop_msg = geometry_msgs::msg::TwistStamped();
+        stop_msg.header.stamp = g_node->get_clock()->now(); 
+        stop_msg.header.frame_id = "base_link";
+        stop_msg.twist.linear.x = 0.0;
+        stop_msg.twist.angular.z = 0.0;
+
+        for (int i = 0; i < 5; i++) {
+            g_publisher->publish(stop_msg);
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+        RCLCPP_INFO(g_node->get_logger(), "Brakes successfully transmitted. Goodbye.");
+    }
+    
+    g_publisher.reset();
+    g_node.reset();
+    rclcpp::shutdown();
+}
 
 class ObstacleAvoidanceNode : public rclcpp::Node {
 public:
     ObstacleAvoidanceNode() : Node("obstacle_avoidance_node") {
-        // --- DECLARE ROS 2 PARAMETERS ---
+        
         this->declare_parameter("goal_x", 2.0);
         this->declare_parameter("goal_y", 0.5);
-
-        // 1. FETCH THE PARAMETERS FIRST
         goal_x_ = this->get_parameter("goal_x").as_double();
         goal_y_ = this->get_parameter("goal_y").as_double();
 
-        // --- 🚨 YOUR CUSTOM GEO-FENCE (WITH INFLATION) 🚨 ---
         double x_min = -0.16; 
         double x_max = 3.90;
         double y_min = -1.48; 
         double y_max = 2.46;
 
-        // 2. THEN CHECK THE LIMITS
         if (goal_x_ < x_min || goal_x_ > x_max || goal_y_ < y_min || goal_y_ > y_max) {
             RCLCPP_ERROR(this->get_logger(), "MISSION ABORTED: Target (%.2f, %.2f) is outside the Safe Zone!", goal_x_, goal_y_);
             RCLCPP_INFO(this->get_logger(), "SAFE LIMITS: X [%.2f to %.2f] | Y [%.2f to %.2f]", x_min, x_max, y_min, y_max);
-            rclcpp::shutdown(); 
-            return; 
+            is_geofence_blown_ = true; 
+            current_status_ = "State: BLOCKED | Error: Target coordinate is completely outside the Geo-Fence!";
         }
 
-        publisher_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/cmd_vel", 10);
+        auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
+        auto sensor_qos = rclcpp::SensorDataQoS(); 
+
+        publisher_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("/cmd_vel", qos);
+        input_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("/input_goal", qos);
+        status_pub_ = this->create_publisher<std_msgs::msg::String>("/robot_status", qos);
+        telemetry_pub_ = this->create_publisher<std_msgs::msg::String>("/robot_telemetry", qos);
+
+        scan_front_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("/scan_front", sensor_qos);
+        scan_left_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("/scan_left", sensor_qos);
+        scan_right_pub_ = this->create_publisher<sensor_msgs::msg::LaserScan>("/scan_right", sensor_qos);
         
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "/odom", 10, std::bind(&ObstacleAvoidanceNode::odom_callback, this, _1));
+            "/odom", qos, std::bind(&ObstacleAvoidanceNode::odom_callback, this, _1));
 
         scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            "/scan", 10, std::bind(&ObstacleAvoidanceNode::scan_callback, this, _1));
+            "/scan", sensor_qos, std::bind(&ObstacleAvoidanceNode::scan_callback, this, _1));
+            
+        goal_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+            "/goal_pose", qos, std::bind(&ObstacleAvoidanceNode::goal_callback, this, _1));
         
-        RCLCPP_INFO(this->get_logger(), "Advanced FSM Autonomy Engaged. Target Acquired: X=%.2f, Y=%.2f", goal_x_, goal_y_);
+        // 🚨 INITIALIZE DUMMY DATA FOR THE HEARTBEAT
+        current_cmd_msg_.header.frame_id = "base_link";
+        current_cmd_msg_.twist.linear.x = 0.0;
+        current_cmd_msg_.twist.angular.z = 0.0;
+
+        // Give the dummy scans a frame and empty data so RViz doesn't throw errors before Gazebo starts
+        auto init_dummy_scan = [](sensor_msgs::msg::LaserScan& scan) {
+            scan.header.frame_id = "base_scan";
+            scan.angle_min = 0.0; scan.angle_max = 2.0 * M_PI; scan.angle_increment = M_PI / 180.0;
+            scan.ranges.assign(360, std::numeric_limits<float>::infinity());
+        };
+        init_dummy_scan(current_front_scan_);
+        init_dummy_scan(current_left_scan_);
+        init_dummy_scan(current_right_scan_);
+
+        heartbeat_timer_ = this->create_wall_timer(
+            std::chrono::milliseconds(100), 
+            std::bind(&ObstacleAvoidanceNode::heartbeat_callback, this));
+
+        RCLCPP_INFO(this->get_logger(), "Pure Heartbeat Architecture Online. Target: X=%.2f, Y=%.2f", goal_x_, goal_y_);
     }
 
-    // --- 🛑 EMERGENCY BRAKES (DESTRUCTOR) 🛑 ---
-    ~ObstacleAvoidanceNode() {
-        RCLCPP_WARN(this->get_logger(), "Node shutting down. Slamming on the brakes...");
-        if (publisher_) {
-            auto stop_msg = geometry_msgs::msg::TwistStamped();
-            stop_msg.header.stamp = this->get_clock()->now(); 
-            stop_msg.header.frame_id = "base_link";
-            stop_msg.twist.linear.x = 0.0;
-            stop_msg.twist.angular.z = 0.0;
-            publisher_->publish(stop_msg);
-        }
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr get_publisher() {
+        return publisher_;
     }
 
 private:
-    double current_x_ = 0.0;
-    double current_y_ = 0.0;
-    double current_yaw_ = 0.0;
-    bool odom_received_ = false; 
-    
     double goal_x_ = 0.0; 
     double goal_y_ = 0.0;
+    double current_x_ = 0.0; 
+    double current_y_ = 0.0; 
+    bool is_geofence_blown_ = false;
 
-    // --- UPGRADED 5-STATE FSM ---
-    enum class Mode { TRACKING, DODGING, RECOVERING, ARRIVED, BLOCKED };
-    Mode current_mode_ = Mode::TRACKING;
+    std::string current_status_ = "State: BOOTING | Waiting for sensor data...";
+    std::string current_telem_ = "Pose: [0.00, 0.00] | Target Dist: 0.00m | Waiting for Odometry...";
+
+    // Storage for the Heartbeat Loop
+    geometry_msgs::msg::TwistStamped current_cmd_msg_;
+    sensor_msgs::msg::LaserScan current_front_scan_;
+    sensor_msgs::msg::LaserScan current_left_scan_;
+    sensor_msgs::msg::LaserScan current_right_scan_;
+
+    SensorProcessor processor_;
+    AutonomyFSM fsm_;
+    MotionController controller_;
+
+    rclcpp::TimerBase::SharedPtr heartbeat_timer_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
     
-    bool is_turning_left_ = false;
-    int recovery_ticks_ = 0;
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr input_pub_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr status_pub_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr telemetry_pub_; 
+    
+    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan_front_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan_left_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr scan_right_pub_;
+
+    const std::string state_names_[5] = {"TRACKING", "DODGING", "RECOVERING", "ARRIVED", "BLOCKED"};
+
+    // 🚨 THE UNIVERSAL HEARTBEAT: Publishes everything at a strict 10Hz regardless of state
+    void heartbeat_callback() {
+        auto now = this->get_clock()->now();
+
+        // 1. Goal
+        geometry_msgs::msg::PointStamped goal_msg;
+        goal_msg.header.stamp = now;
+        goal_msg.header.frame_id = "odom"; 
+        goal_msg.point.x = goal_x_;
+        goal_msg.point.y = goal_y_;
+        input_pub_->publish(goal_msg);
+
+        // 2. Status & Telemetry
+        std_msgs::msg::String status_msg, telem_msg;
+        status_msg.data = current_status_;
+        telem_msg.data = current_telem_;
+        status_pub_->publish(status_msg);
+        telemetry_pub_->publish(telem_msg);
+
+        // 3. Movement Commands
+        current_cmd_msg_.header.stamp = now;
+        publisher_->publish(current_cmd_msg_);
+
+        // 4. LiDAR Regions
+        // Removed overwriting the timestamp with now(). This breaks RViz TF lookups 
+        // because now() is slightly ahead of the TF tree, causing RViz to drop the scans!
+        // The scans will now retain their original, perfectly-synced Gazebo timestamps.
+        scan_front_pub_->publish(current_front_scan_);
+        scan_left_pub_->publish(current_left_scan_);
+        scan_right_pub_->publish(current_right_scan_);
+    }
+
+    void goal_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
+        double new_x = msg->pose.position.x;
+        double new_y = msg->pose.position.y;
+        
+        // Match the same geofence used at startup
+        double x_min = -0.16; 
+        double x_max = 3.90;
+        double y_min = -1.48; 
+        double y_max = 2.46;
+
+        if (new_x < x_min || new_x > x_max || new_y < y_min || new_y > y_max) {
+            RCLCPP_WARN(this->get_logger(), "RViz Goal Rejected: (%.2f, %.2f) is outside the Safe Zone!", new_x, new_y);
+            return;
+        }
+
+        goal_x_ = new_x;
+        goal_y_ = new_y;
+        is_geofence_blown_ = false; // Reset error state
+        fsm_.reset(); // Force FSM to start tracking again
+        RCLCPP_INFO(this->get_logger(), "New Goal Received from RViz: X=%.2f, Y=%.2f", goal_x_, goal_y_);
+    }
 
     void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg) {
         current_x_ = msg->pose.pose.position.x;
         current_y_ = msg->pose.pose.position.y;
-
+        
         double qx = msg->pose.pose.orientation.x;
         double qy = msg->pose.pose.orientation.y;
         double qz = msg->pose.pose.orientation.z;
         double qw = msg->pose.pose.orientation.w;
-        current_yaw_ = std::atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
+        double yaw = std::atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
 
-        odom_received_ = true; 
+        processor_.update_odometry(current_x_, current_y_, yaw);
     }
 
     void scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
-        if (!odom_received_) return; 
         
-        auto twist_msg = geometry_msgs::msg::TwistStamped();
-        twist_msg.header.stamp = this->get_clock()->now();
-        twist_msg.header.frame_id = "base_link";
+        if (is_geofence_blown_) return; 
 
-        float min_front = 10.0;
-        float sum_left = 0.0;
-        int count_left = 0;
-        float sum_right = 0.0;
-        int count_right = 0;
+        ProcessedSensorData data = processor_.process_scan(msg, goal_x_, goal_y_);
 
-        for (size_t i = 0; i < msg->ranges.size(); i++) {
-            float d = msg->ranges[i];
-            if (std::isinf(d) || std::isnan(d) || d == 0.0) d = 10.0; 
-
-            if (i <= 25 || i >= 335) {
-                if (d < min_front) min_front = d;
-            } else if (i > 25 && i <= 90) {
-                sum_left += d; count_left++;
-            } else if (i >= 270 && i < 335) {
-                sum_right += d; count_right++;
-            }
+        if (!data.is_valid) {
+            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Waiting for /odom data...");
+            return; 
         }
 
-        float avg_left = (count_left > 0) ? (sum_left / count_left) : 0.0;
-        float avg_right = (count_right > 0) ? (sum_right / count_right) : 0.0;
+        // 🚨 OVERWRITE DUMMIES WITH REAL SENSOR DATA
+        current_front_scan_ = data.front_scan;
+        current_left_scan_ = data.left_scan;
+        current_right_scan_ = data.right_scan;
 
-        float danger_distance = 0.30; 
-        float clear_distance = 0.45;  
+        FSMDecision decision = fsm_.update_state(data);
 
-        // --- STATE TRANSITIONS ---
-        double distance_to_goal = std::hypot(goal_x_ - current_x_, goal_y_ - current_y_);
+        current_status_ = "State: " + state_names_[(int)decision.current_mode] + " | " + decision.reasoning;
 
-        if (current_mode_ == Mode::ARRIVED || current_mode_ == Mode::BLOCKED) {
-            // Locked state
-        }
-        else if (distance_to_goal < 0.2) {
-            current_mode_ = Mode::ARRIVED;
-            RCLCPP_INFO_ONCE(this->get_logger(), "MISSION ACCOMPLISHED: Arrived at Target.");
-        }
-        else if (distance_to_goal < 0.55 && min_front < danger_distance) {
-            current_mode_ = Mode::BLOCKED;
-            RCLCPP_ERROR_ONCE(this->get_logger(), "MISSION ABORTED: Target coordinate is inside an obstacle!");
-        }
-        else if (current_mode_ == Mode::TRACKING) {
-            if (min_front < danger_distance) {
-                current_mode_ = Mode::DODGING;
-                is_turning_left_ = (avg_left > avg_right);
-                RCLCPP_WARN(this->get_logger(), "Obstacle detected. Dodge maneuver engaged.");
-            }
-        } 
-        else if (current_mode_ == Mode::DODGING) {
-            if (min_front > clear_distance) {
-                current_mode_ = Mode::RECOVERING;
-                recovery_ticks_ = 15; 
-                RCLCPP_INFO(this->get_logger(), "Gap found. Pushing through...");
-            }
-        } 
-        else if (current_mode_ == Mode::RECOVERING) {
-            recovery_ticks_--;
-            if (min_front < danger_distance) {
-                current_mode_ = Mode::DODGING;
-                is_turning_left_ = (avg_left > avg_right);
-            } else if (recovery_ticks_ <= 0) {
-                current_mode_ = Mode::TRACKING;
-                RCLCPP_INFO(this->get_logger(), "Obstacle cleared. Re-acquiring target.");
-            }
+        std::stringstream ss;
+        ss << "Pose: [" << std::fixed << std::setprecision(2) << current_x_ << ", " << current_y_ 
+           << "] | Target Dist: " << data.distance_to_goal << "m | AngErr: " << data.angle_error << "rad"
+           << " || LiDAR -> Front(Min): " << data.min_front << "m (Danger: <0.30m, Safe: >0.45m) | "
+           << "Left(Avg): " << data.avg_left << "m | Right(Avg): " << data.avg_right << "m";
+        current_telem_ = ss.str();
+
+        static int tick = 0;
+        bool should_log_debug = (tick++ % 5 == 0);
+        if (should_log_debug) { 
+            RCLCPP_DEBUG(this->get_logger(), "[Processor] Pose: [%.2f, %.2f] | Dist: %.2fm | AngErr: %.2frad | MinFront: %.2fm", 
+                        current_x_, current_y_, data.distance_to_goal, data.angle_error, data.min_front);
         }
 
-        // --- MOVEMENT EXECUTION ---
-        if (current_mode_ == Mode::ARRIVED || current_mode_ == Mode::BLOCKED) {
-            twist_msg.twist.linear.x = 0.0;
-            twist_msg.twist.angular.z = 0.0;
-        } 
-        else if (current_mode_ == Mode::DODGING) {
-            twist_msg.twist.linear.x = 0.0; 
-            twist_msg.twist.angular.z = is_turning_left_ ? 0.6 : -0.6; 
-        } 
-        else if (current_mode_ == Mode::RECOVERING) {
-            twist_msg.twist.linear.x = 0.25; 
-            twist_msg.twist.angular.z = 0.0; 
-        }
-        else if (current_mode_ == Mode::TRACKING) {
-            double angle_to_goal = std::atan2(goal_y_ - current_y_, goal_x_ - current_x_);
-            double angle_error = angle_to_goal - current_yaw_;
-            
-            while (angle_error > M_PI) angle_error -= 2.0 * M_PI;
-            while (angle_error < -M_PI) angle_error += 2.0 * M_PI;
-
-            // --- NATIVE ROS 2 DEBUG LOG ---
-            // View this by appending: --log-level debug
-            static int tick = 0;
-            if (tick++ % 5 == 0) { 
-                RCLCPP_DEBUG(this->get_logger(), "Live -> Pose: [X:%.2f, Y:%.2f] | Dist: %.2fm | AngErr: %.2frad", 
-                            current_x_, current_y_, distance_to_goal, angle_error);
-            }
-
-            // --- THE PIVOT FIX ---
-            if (std::abs(angle_error) > 0.3) {
-                twist_msg.twist.linear.x = 0.0; 
-                twist_msg.twist.angular.z = std::clamp(0.8 * angle_error, -0.5, 0.5); 
+        static Mode last_mode = Mode::TRACKING;
+        if (decision.current_mode != last_mode) {
+            if (decision.current_mode == Mode::BLOCKED) {
+                RCLCPP_ERROR(this->get_logger(), "[Worker 2: FSM] BLOCKED: Target is inside an obstacle!");
             } else {
-                twist_msg.twist.linear.x = 0.2; 
-                twist_msg.twist.angular.z = std::clamp(0.6 * angle_error, -0.5, 0.5); 
+                RCLCPP_INFO(this->get_logger(), "[Worker 2: FSM] State Changed to %s! Reason: %s", 
+                           state_names_[(int)decision.current_mode].c_str(), decision.reasoning.c_str());
             }
+            last_mode = decision.current_mode;
         }
 
-        publisher_->publish(twist_msg);
+        VelocityCommand cmd = controller_.calculate_velocity(decision, data.angle_error);
 
-        // --- 🔌 AUTOMATIC SHUTDOWN TRIGGER 🔌 ---
-        if (current_mode_ == Mode::ARRIVED || current_mode_ == Mode::BLOCKED) {
-            RCLCPP_INFO(this->get_logger(), "Task Concluded. Auto-shutting down node to free terminal.");
-            rclcpp::shutdown();
+        // 🚨 OVERWRITE DUMMY COMMANDS WITH REAL DRIVING LOGIC
+        current_cmd_msg_.twist.linear.x = cmd.linear_x;
+        current_cmd_msg_.twist.angular.z = cmd.angular_z;
+
+        // Auto-shutdown removed so topics stay alive forever when arrived!
+        if (decision.current_mode == Mode::ARRIVED) {
+            RCLCPP_INFO_ONCE(this->get_logger(), "Target Reached! Holding position and keeping topics alive...");
         }
     }
-
-    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub_;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
 };
 
 int main(int argc, char * argv[]) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<ObstacleAvoidanceNode>());
-    rclcpp::shutdown();
+    
+    auto node = std::make_shared<ObstacleAvoidanceNode>();
+    
+    g_node = node;
+    g_publisher = node->get_publisher();
+    signal(SIGINT, sigint_handler);
+    
+    rclcpp::spin(node);
+    
+    g_publisher.reset();
+    g_node.reset();
+    node.reset();
+    
     return 0;
 }
