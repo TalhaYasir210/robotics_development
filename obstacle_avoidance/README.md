@@ -1,7 +1,7 @@
-# TurtleBot3 Autonomous Obstacle Avoidance
+# TurtleBot3 Obstacle Avoidance
 
 ### About This Repository
-A robust, modular ROS 2 C++ architecture for the TurtleBot3 (Waffle model) that autonomously navigates to specific (x,y) coordinates within a Gazebo simulation while dynamically avoiding obstacles.
+modular ROS 2 C++ architecture for the TurtleBot3 (Waffle model) that navigates to specific (x,y) coordinates within a Gazebo simulation while dynamically avoiding obstacles.
 
 ### Architecture Overview (How it Works)
 To make the robot intelligent and easy to maintain, the code is split into four distinct components. Here is a simple breakdown of how they work together to control the robot:
@@ -52,7 +52,7 @@ mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
 
 In the same terminal, paste the following command to clone the specific branch of the project repository (Make sure to replace [YOUR-BRANCH-NAME] with your actual branch name!):
 ```bash
-git clone -b feature/lidar-obstacle-avoidance https://github.com/TalhaYasir210/robotics_development.git
+git clone -b modular_Structured_obstacle_avoidance https://github.com/TalhaYasir210/robotics_development.git
 ```
 
 In the same terminal, paste the following commands to compile the cloned package:
@@ -77,9 +77,14 @@ export TURTLEBOT3_MODEL=waffle
 ```bash
 ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 ```
+- After launching the gazebo world you simulator will look something like this
+
+<img width="2048" height="1280" alt="Initial Spawn Position of the bot" src="https://github.com/user-attachments/assets/c8ec01f2-f116-4c89-a86b-197ab0cafa28" />
+
+
 
 ## NOTE:
-If bot glitches or do unexpected moment press CTRL + C and try to relaunch your turtlebot3 world using following step by step execution of commands
+when you launch turtlebot3 world and found the bot is not on the inital spawn position or glitches or do unexpected moment press CTRL + C and try to relaunch your turtlebot3 world using following step by step execution of commands
 - Kill any lingering ROS 2 code you wrote
 ```bash
 killall -9 obstacle_avoidance_node
@@ -108,14 +113,22 @@ export TURTLEBOT3_MODEL=waffle
 ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
 ```
 
-Open a first terminal, source your workspace, and run the obstacle_avoidance_node with specified goal_x and goal_y parameters:
+open the first terminal again, and run the obstacle_avoidance_node with specified goal_x and goal_y parameters (following command uses goal cordinates as x=3.0  & y=1.5 , you can change them according to your desire:
 ```bash
-ros2 run obstacle_avoidance obstacle_avoidance_node --ros-args -p use_sim_time:=true -p goal_x:=3.0 -p goal_y:=0.5
+ros2 run obstacle_avoidance obstacle_avoidance_node --ros-args -p use_sim_time:=true -p goal_x:=3.0 -p goal_y:=1.5
 ```
 The robot will start navigating toward the goal coordinate while actively avoiding pillars and walls.
 
+<img width="2048" height="1280" alt="bot_moving_toward_goal_while_avoiding_obstacles" src="https://github.com/user-attachments/assets/01381ec0-d905-4332-b7f0-f2489b3efca7" />
+
+
+after some time the bot will reach its goal coordinates and you will see the info log in the termianl saying TARGET REACHED
+
+<img width="2048" height="1280" alt="BOT has reached the goal coordinates" src="https://github.com/user-attachments/assets/a9871e0b-a9fa-4b6e-8b5d-31c6b53df3be" />
+
+
 ## NOTE:
-After reaching the desired goal, the terminal will give feedback confirming the mission is accomplished and the node will automatically shut down.
+After reaching the desired goal, the terminal will give feedback confirming the mission is accomplished and to shutdown the node and give new coordinates press CTRL+C in the first terminal where you runned the node
 Safety Failsafes & Notes
 - Geo-Fence Error: An error message is triggered immediately if the input coordinates exceed the safe map limits (e.g., goal_x := 5.0). The terminal will display a log message highlighting the valid Safe Zone limits and shut down without moving the robot.
 - Blocked Goal Error: An error message is triggered if the robot gets close to the goal, but determines the exact coordinate is located physically inside a solid obstacle.
