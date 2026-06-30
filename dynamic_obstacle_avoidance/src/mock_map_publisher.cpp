@@ -19,24 +19,43 @@ private:
     void publishMap() {
         auto message = nav_msgs::msg::OccupancyGrid();
         
+        // --- YOUR CUSTOM MAP ---
+        // 0 = Free Space, 1 = Wall/Obstacle
+        // Feel free to change the size or draw your own obstacles!
+        std::vector<std::vector<int>> custom_map = {
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 1, 1, 1, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
+            {0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
+            {0, 0, 0, 0, 1, 1, 1, 1, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 1, 1, 1, 0, 0, 1, 1, 1, 0},
+            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0},
+            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        };
+
+        int height = custom_map.size();
+        int width = custom_map[0].size();
+
         // 1. Setup the map metadata
         message.header.stamp = this->now();
         message.header.frame_id = "map";
-        message.info.resolution = 1.0; 
-        message.info.width = 10;
-        message.info.height = 10;
+        message.info.resolution = 1.0;  // 1 meter per cell
+        message.info.width = width;
+        message.info.height = height;
         
-        // 2. Create a flat 1D array of 100 zeros (Free space)
-        message.data.assign(100, 0); 
+        // 2. Convert visual 2D map into the flat 1D array ROS expects
+        message.data.assign(width * height, 0); 
         
-        // 3. Draw our wall (Obstacles = 100 in ROS)
-        // Formula to find 1D index: index = x + (y * width)
-        // Our wall from the C++ test was at y=5, x=2,3,4,5,6
-        message.data[2 + (5 * 10)] = 100;
-        message.data[3 + (5 * 10)] = 100;
-        message.data[4 + (5 * 10)] = 100;
-        message.data[5 + (5 * 10)] = 100;
-        message.data[6 + (5 * 10)] = 100;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (custom_map[y][x] == 1) {
+                    int index = x + (y * width);
+                    message.data[index] = 100; // 100 = Obstacle in ROS
+                }
+            }
+        }
 
         // Publish to the network
         publisher_->publish(message);

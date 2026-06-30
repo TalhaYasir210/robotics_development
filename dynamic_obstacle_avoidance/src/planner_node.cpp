@@ -59,61 +59,37 @@ private:
             return;
         }
 
-        RCLCPP_INFO(this->get_logger(), "Running A* Planner...");
-
-        int width = current_map_->info.width;
-        int height = current_map_->info.height;
-        double resolution = current_map_->info.resolution;
-        double origin_x = current_map_->info.origin.position.x;
-        double origin_y = current_map_->info.origin.position.y;
-
-        // Convert world coordinates to grid indices
-        int start_grid_x = std::round((start_x_ - origin_x) / resolution);
-        int start_grid_y = std::round((start_y_ - origin_y) / resolution);
-        
-        int goal_grid_x = std::round((goal_x_ - origin_x) / resolution);
-        int goal_grid_y = std::round((goal_y_ - origin_y) / resolution);
-
-        // Bound checks
-        if (start_grid_x < 0 || start_grid_x >= width || start_grid_y < 0 || start_grid_y >= height) {
-            RCLCPP_ERROR(this->get_logger(), "Start position is outside the map!");
-            return;
-        }
-        if (goal_grid_x < 0 || goal_grid_x >= width || goal_grid_y < 0 || goal_grid_y >= height) {
-            RCLCPP_ERROR(this->get_logger(), "Goal position is outside the map!");
-            return;
-        }
-
-        // Create 2D grid
-        std::vector<std::vector<int>> grid(height, std::vector<int>(width, 0));
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int index = x + (y * width);
-                if (current_map_->data[index] >= 50) {
-                    grid[y][x] = 1; 
-                }
-            }
-        }
-
-        // GridNode expects (row, col) which maps to (y, x) in grid indices
-        GridNode start_node(start_grid_y, start_grid_x);
-        GridNode goal_node(goal_grid_y, goal_grid_x);
+        RCLCPP_INFO(this->get_logger(), "Planning Path from Initial Location: [%.2f, %.2f] to Goal Location: [%.2f, %.2f]", start_x_, start_y_, goal_x_, goal_y_);
 
         AStarPlanner planner;
-        std::vector<GridNode*> path = planner.computePath(grid, start_node, goal_node);
+        auto path_coords = planner.findPath(
+            current_map_->data,
+            current_map_->info.width,
+            current_map_->info.height,
+            current_map_->info.resolution,
+            current_map_->info.origin.position.x,
+            current_map_->info.origin.position.y,
+            start_x_, start_y_,
+            goal_x_, goal_y_
+        );
 
-        if (!path.empty()) {
+        if (!path_coords.empty()) {
             nav_msgs::msg::Path path_msg;
             path_msg.header.stamp = this->now();
             path_msg.header.frame_id = current_map_->header.frame_id;
+            
+            std::string path_str = "Planned Path Coordinates:\n";
 
-            for (int p = path.size() - 1; p >= 0; p--) {
+            for (size_t i = 0; i < path_coords.size(); i++) {
+                path_str += "[" + std::to_string(path_coords[i].x) + ", " + std::to_string(path_coords[i].y) + 
+                            ", g: " + std::to_string(path_coords[i].g_cost) + ", h: " + std::to_string(path_coords[i].h_cost) + "]";
+                if (i != path_coords.size() - 1) path_str += "\n -> ";
+                
                 geometry_msgs::msg::PoseStamped pose;
                 pose.header = path_msg.header;
                 
-                // Convert back from GridNode (row=x, col=y) to world coordinates
-                pose.pose.position.x = (path[p]->y * resolution) + origin_x;
-                pose.pose.position.y = (path[p]->x * resolution) + origin_y;
+                pose.pose.position.x = path_coords[i].x;
+                pose.pose.position.y = path_coords[i].y;
                 pose.pose.position.z = 0.0;
                 pose.pose.orientation.w = 1.0;
                 
@@ -122,6 +98,7 @@ private:
             
             path_publisher_->publish(path_msg);
             RCLCPP_INFO(this->get_logger(), "Path successfully planned and published!");
+            RCLCPP_INFO(this->get_logger(), "%s\n", path_str.c_str());
             
             // --- SIMULATED MOVEMENT ---
             // Assume the robot drives to the goal perfectly.
