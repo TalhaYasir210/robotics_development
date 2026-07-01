@@ -21,7 +21,7 @@ GridNode::GridNode(int x_pos, int y_pos) {
 }
 
 // ==========================================================
-// 1. Main Interface
+// 1. Main Interface (The starting point)
 // ==========================================================
 std::vector<Point2D> AStarPlanner::findPath(
     const std::vector<int8_t>& map_data, 
@@ -35,15 +35,17 @@ std::vector<Point2D> AStarPlanner::findPath(
     double goal_x, 
     double goal_y) 
 {
-    // 1. Convert world coordinates to grid indices
+    // 1. Create 2D grid from 1D ROS map data
+    std::vector<std::vector<int>> grid = buildGridFromMap(map_data, width, height);
+
+    // 2. Convert world coordinates to grid indices
     int start_grid_x = worldToGrid(start_x, origin_x, resolution);
     int start_grid_y = worldToGrid(start_y, origin_y, resolution);
     
     int goal_grid_x = worldToGrid(goal_x, origin_x, resolution);
     int goal_grid_y = worldToGrid(goal_y, origin_y, resolution);
 
-    // 2. Bound checks
-    // Note: bounds checking is against height (ROWS) and width (COLS)
+    // 3. Bound checks
     if (!isWithinBounds(start_grid_y, start_grid_x, height, width)) {
         std::cout << "[AStarPlanner] Start position is outside the map!" << std::endl;
         return {};
@@ -53,10 +55,7 @@ std::vector<Point2D> AStarPlanner::findPath(
         return {};
     }
 
-    // 3. Create 2D grid
-    std::vector<std::vector<int>> grid = buildGridFromMap(map_data, width, height);
-
-    // 4. Validate Start and Goal
+    // 4. Validate Start and Goal against obstacles
     if (isObstacle(grid, start_grid_y, start_grid_x)) {
         std::cout << "[AStarPlanner] FAILED: Start position is inside an obstacle!" << std::endl;
         return {};
@@ -78,7 +77,7 @@ std::vector<Point2D> AStarPlanner::findPath(
 }
 
 // ==========================================================
-// 2. Setup & Grid Construction
+// 2. Grid Construction (Map Creation Phase)
 // ==========================================================
 std::vector<std::vector<int>> AStarPlanner::buildGridFromMap(const std::vector<int8_t>& flat_map_data, int width, int height) {
     std::vector<std::vector<int>> grid(height, std::vector<int>(width, 0));
@@ -94,25 +93,28 @@ std::vector<std::vector<int>> AStarPlanner::buildGridFromMap(const std::vector<i
 }
 
 // ==========================================================
-// 3. Coordinate Conversion (Input)
+// 3. Coordinate Conversion (Input Phase)
 // ==========================================================
 int AStarPlanner::worldToGrid(double world_coord, double origin, double resolution) {
     return std::round((world_coord - origin) / resolution);
 }
 
 // ==========================================================
-// 4. Map Validation
+// 4. Map Validation (Bounds Check Phase)
 // ==========================================================
 bool AStarPlanner::isWithinBounds(int x, int y, int width, int height) {
     return (x >= 0 && x < width && y >= 0 && y < height);
 }
 
+// ==========================================================
+// 5. Map Validation (Obstacle Check Phase)
+// ==========================================================
 bool AStarPlanner::isObstacle(const std::vector<std::vector<int>>& grid, int x, int y) {
     return grid[x][y] == 1; // 1 means obstacle
 }
 
 // ==========================================================
-// 5. Core A* Mechanics & Engine
+// 6. Core A* Engine (Path Calculation Phase)
 // ==========================================================
 std::vector<GridNode*> AStarPlanner::computePath(const std::vector<std::vector<int>>& grid, GridNode start, GridNode goal) {
     int ROWS = grid.size();
@@ -238,7 +240,7 @@ float AStarPlanner::calculateHeuristic(int x1, int y1, int x2, int y2) {
 }
 
 // ==========================================================
-// 6. Path Output Conversion
+// 7. Path Output Conversion (Final Phase)
 // ==========================================================
 std::vector<Point2D> AStarPlanner::convertGridPathToWorldPath(const std::vector<GridNode*>& grid_path, double origin_x, double origin_y, double resolution) {
     std::vector<Point2D> world_path;
