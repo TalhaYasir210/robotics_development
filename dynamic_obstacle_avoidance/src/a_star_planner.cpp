@@ -20,11 +20,101 @@ GridNode::GridNode(int x_pos, int y_pos) {
     parent = nullptr;
 }
 
-float AStarPlanner::calculateHeuristic(int x1, int y1, int x2, int y2) {
-    return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2));
+// ==========================================================
+// 1. Main Interface
+// ==========================================================
+std::vector<Point2D> AStarPlanner::findPath(
+    const std::vector<int8_t>& map_data, 
+    int width, 
+    int height, 
+    double resolution, 
+    double origin_x, 
+    double origin_y, 
+    double start_x, 
+    double start_y, 
+    double goal_x, 
+    double goal_y) 
+{
+    // 1. Convert world coordinates to grid indices
+    int start_grid_x = worldToGrid(start_x, origin_x, resolution);
+    int start_grid_y = worldToGrid(start_y, origin_y, resolution);
+    
+    int goal_grid_x = worldToGrid(goal_x, origin_x, resolution);
+    int goal_grid_y = worldToGrid(goal_y, origin_y, resolution);
+
+    // 2. Bound checks
+    // Note: bounds checking is against height (ROWS) and width (COLS)
+    if (!isWithinBounds(start_grid_y, start_grid_x, height, width)) {
+        std::cout << "[AStarPlanner] Start position is outside the map!" << std::endl;
+        return {};
+    }
+    if (!isWithinBounds(goal_grid_y, goal_grid_x, height, width)) {
+        std::cout << "[AStarPlanner] Goal position is outside the map!" << std::endl;
+        return {};
+    }
+
+    // 3. Create 2D grid
+    std::vector<std::vector<int>> grid = buildGridFromMap(map_data, width, height);
+
+    // 4. Validate Start and Goal
+    if (isObstacle(grid, start_grid_y, start_grid_x)) {
+        std::cout << "[AStarPlanner] FAILED: Start position is inside an obstacle!" << std::endl;
+        return {};
+    }
+    if (isObstacle(grid, goal_grid_y, goal_grid_x)) {
+        std::cout << "[AStarPlanner] FAILED: Goal position is inside an obstacle!" << std::endl;
+        return {};
+    }
+
+    // GridNode expects (row, col) which maps to (y, x) in grid indices
+    GridNode start_node(start_grid_y, start_grid_x);
+    GridNode goal_node(goal_grid_y, goal_grid_x);
+
+    // 5. Compute Path
+    std::vector<GridNode*> grid_path = computePath(grid, start_node, goal_node);
+
+    // 6. Convert to world coordinates
+    return convertGridPathToWorldPath(grid_path, origin_x, origin_y, resolution);
 }
 
-std::vector<GridNode*> AStarPlanner::computePath(std::vector<std::vector<int>>& grid, GridNode start, GridNode goal) {
+// ==========================================================
+// 2. Setup & Grid Construction
+// ==========================================================
+std::vector<std::vector<int>> AStarPlanner::buildGridFromMap(const std::vector<int8_t>& flat_map_data, int width, int height) {
+    std::vector<std::vector<int>> grid(height, std::vector<int>(width, 0));
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int index = x + (y * width);
+            if (flat_map_data[index] >= 50) {
+                grid[y][x] = 1; 
+            }
+        }
+    }
+    return grid;
+}
+
+// ==========================================================
+// 3. Coordinate Conversion (Input)
+// ==========================================================
+int AStarPlanner::worldToGrid(double world_coord, double origin, double resolution) {
+    return std::round((world_coord - origin) / resolution);
+}
+
+// ==========================================================
+// 4. Map Validation
+// ==========================================================
+bool AStarPlanner::isWithinBounds(int x, int y, int width, int height) {
+    return (x >= 0 && x < width && y >= 0 && y < height);
+}
+
+bool AStarPlanner::isObstacle(const std::vector<std::vector<int>>& grid, int x, int y) {
+    return grid[x][y] == 1; // 1 means obstacle
+}
+
+// ==========================================================
+// 5. Core A* Mechanics & Engine
+// ==========================================================
+std::vector<GridNode*> AStarPlanner::computePath(const std::vector<std::vector<int>>& grid, GridNode start, GridNode goal) {
     int ROWS = grid.size();
     int COLS = grid[0].size();
 
@@ -74,36 +164,9 @@ std::vector<GridNode*> AStarPlanner::computePath(std::vector<std::vector<int>>& 
             return final_path; 
         }
 
-        // Update neighbors to include diagonals
-        int dx[8] = {-1, 1, 0, 0, -1, -1, 1, 1};
-        int dy[8] = {0, 0, -1, 1, -1, 1, -1, 1};
-
-        for (int i = 0; i < 8; i++) {
-            int new_x = current_node->x + dx[i];
-            int new_y = current_node->y + dy[i];
-
-            if (new_x < 0 || new_x >= ROWS || new_y < 0 || new_y >= COLS) continue;
-            if (grid[new_x][new_y] == 1) continue;
-            if (closed_list[new_x][new_y] == true) continue;
-
-            GridNode* neighbor = new GridNode(new_x, new_y);
-            neighbor->parent = current_node; 
-            
-            // When calculating the cost for diagonal neighbors, use 1.414 instead of 1.0
-            float move_cost = (std::abs(dx[i]) + std::abs(dy[i]) == 2) ? 1.414f : 1.0f;
-
-            // Prevent corner cutting!
-            // If we are moving diagonally, we must check if the two adjacent straight cells are obstacles.
-            if (move_cost > 1.0f) {
-                if (grid[current_node->x + dx[i]][current_node->y] == 1 || 
-                    grid[current_node->x][current_node->y + dy[i]] == 1) {
-                    continue; // Squeezing through the corner is not allowed
-                }
-            }
-
-            neighbor->g_cost = current_node->g_cost + move_cost;
-            neighbor->h_cost = calculateHeuristic(new_x, new_y, goal.x, goal.y);
-
+        // Generate and evaluate neighbors
+        std::vector<GridNode*> neighbors = getValidNeighbors(current_node, grid, closed_list, goal);
+        for (GridNode* neighbor : neighbors) {
             open_list.push(neighbor);
         }
 
@@ -126,80 +189,72 @@ std::vector<GridNode*> AStarPlanner::computePath(std::vector<std::vector<int>>& 
     return std::vector<GridNode*>(); 
 }
 
-std::vector<Point2D> AStarPlanner::findPath(
-    const std::vector<int8_t>& map_data, 
-    int width, 
-    int height, 
-    double resolution, 
-    double origin_x, 
-    double origin_y, 
-    double start_x, 
-    double start_y, 
-    double goal_x, 
-    double goal_y) 
-{
-    // 1. Convert world coordinates to grid indices
-    int start_grid_x = std::round((start_x - origin_x) / resolution);
-    int start_grid_y = std::round((start_y - origin_y) / resolution);
+std::vector<GridNode*> AStarPlanner::getValidNeighbors(GridNode* current_node, const std::vector<std::vector<int>>& grid, const std::vector<std::vector<bool>>& closed_list, GridNode goal) {
+    std::vector<GridNode*> neighbors;
+    int ROWS = grid.size();
+    int COLS = grid[0].size();
     
-    int goal_grid_x = std::round((goal_x - origin_x) / resolution);
-    int goal_grid_y = std::round((goal_y - origin_y) / resolution);
+    int dx[8] = {-1, 1, 0, 0, -1, -1, 1, 1};
+    int dy[8] = {0, 0, -1, 1, -1, 1, -1, 1};
 
-    // 2. Bound checks
-    if (start_grid_x < 0 || start_grid_x >= width || start_grid_y < 0 || start_grid_y >= height) {
-        std::cout << "[AStarPlanner] Start position is outside the map!" << std::endl;
-        return {};
-    }
-    if (goal_grid_x < 0 || goal_grid_x >= width || goal_grid_y < 0 || goal_grid_y >= height) {
-        std::cout << "[AStarPlanner] Goal position is outside the map!" << std::endl;
-        return {};
-    }
+    for (int i = 0; i < 8; i++) {
+        int new_x = current_node->x + dx[i];
+        int new_y = current_node->y + dy[i];
 
-    // 3. Create 2D grid
-    std::vector<std::vector<int>> grid(height, std::vector<int>(width, 0));
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int index = x + (y * width);
-            if (map_data[index] >= 50) {
-                grid[y][x] = 1; 
-            }
+        if (!isWithinBounds(new_x, new_y, ROWS, COLS)) continue;
+        if (isObstacle(grid, new_x, new_y)) continue;
+        if (closed_list[new_x][new_y]) continue;
+        if (isCornerCutting(grid, current_node->x, current_node->y, dx[i], dy[i])) continue;
+
+        GridNode* neighbor = new GridNode(new_x, new_y);
+        neighbor->parent = current_node; 
+        
+        float move_cost = calculateMoveCost(dx[i], dy[i]);
+        neighbor->g_cost = current_node->g_cost + move_cost;
+        neighbor->h_cost = calculateHeuristic(new_x, new_y, goal.x, goal.y);
+        
+        neighbors.push_back(neighbor);
+    }
+    return neighbors;
+}
+
+bool AStarPlanner::isCornerCutting(const std::vector<std::vector<int>>& grid, int current_x, int current_y, int dx, int dy) {
+    float move_cost = calculateMoveCost(dx, dy);
+    if (move_cost > 1.0f) {
+        if (grid[current_x + dx][current_y] == 1 || 
+            grid[current_x][current_y + dy] == 1) {
+            return true;
         }
     }
+    return false;
+}
 
-    // 4. Validate Start and Goal
-    if (grid[start_grid_y][start_grid_x] == 1) {
-        std::cout << "[AStarPlanner] FAILED: Start position is inside an obstacle!" << std::endl;
-        return {};
-    }
-    if (grid[goal_grid_y][goal_grid_x] == 1) {
-        std::cout << "[AStarPlanner] FAILED: Goal position is inside an obstacle!" << std::endl;
-        return {};
-    }
+float AStarPlanner::calculateMoveCost(int dx, int dy) {
+    return (std::abs(dx) + std::abs(dy) == 2) ? 1.414f : 1.0f;
+}
 
-    // GridNode expects (row, col) which maps to (y, x) in grid indices
-    GridNode start_node(start_grid_y, start_grid_x);
-    GridNode goal_node(goal_grid_y, goal_grid_x);
+float AStarPlanner::calculateHeuristic(int x1, int y1, int x2, int y2) {
+    return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2));
+}
 
-    // 5. Compute Path
-    std::vector<GridNode*> grid_path = computePath(grid, start_node, goal_node);
-
-    // 6. Convert to world coordinates
+// ==========================================================
+// 6. Path Output Conversion
+// ==========================================================
+std::vector<Point2D> AStarPlanner::convertGridPathToWorldPath(const std::vector<GridNode*>& grid_path, double origin_x, double origin_y, double resolution) {
     std::vector<Point2D> world_path;
     // Iterate from back to front since computePath returns path from goal to start
     for (int p = grid_path.size() - 1; p >= 0; p--) {
         Point2D pt;
-        // Convert back from GridNode (row=x, col=y) to world coordinates
-        pt.x = (grid_path[p]->y * resolution) + origin_x;
-        pt.y = (grid_path[p]->x * resolution) + origin_y;
+        // Note: in GridNode, x = row = grid_y, y = col = grid_x
+        pt.x = gridToWorld(grid_path[p]->y, origin_x, resolution);
+        pt.y = gridToWorld(grid_path[p]->x, origin_y, resolution);
         pt.g_cost = grid_path[p]->g_cost;
         pt.h_cost = grid_path[p]->h_cost;
         world_path.push_back(pt);
     }
-
-    // Optional: free memory returned by computePath
-    // Though it doesn't free everything that was put into open_list, 
-    // it frees the nodes in the final path list to avoid full leak of the result list.
-    // For a complete memory leak fix, computePath would need a refactor, but this handles the return value at least.
-
     return world_path;
+}
+
+double AStarPlanner::gridToWorld(int grid_index, double origin, double resolution) {
+    return (grid_index * resolution) + origin;
 }
