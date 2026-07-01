@@ -26,8 +26,11 @@ class AStarPlanner {
 private:
     float calculateHeuristic(int x1, int y1, int x2, int y2);
     std::vector<GridNode*> computePath(std::vector<std::vector<int>>& grid, GridNode start, GridNode goal);
+    bool debug_mode_ = false;
 
 public:
+    void setDebugMode(bool debug) { debug_mode_ = debug; }
+
     std::vector<Point2D> findPath(
         const std::vector<int8_t>& map_data, 
         int width, 

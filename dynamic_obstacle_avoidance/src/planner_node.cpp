@@ -7,12 +7,16 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 
 using std::placeholders::_1;
 
 class PathPlannerNode : public rclcpp::Node {
 public:
     PathPlannerNode() : Node("path_planner_node") {
+        this->declare_parameter<bool>("enable_planner_debug", false);
+        
         // Subscribers
         map_subscriber_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
             "/map", 10, std::bind(&PathPlannerNode::mapCallback, this, _1));
@@ -32,9 +36,10 @@ public:
 private:
     void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
         current_map_ = msg;
-        has_map_ = true;
-        RCLCPP_INFO(this->get_logger(), "Map received and stored.");
-        planPath();
+        if (!has_map_) {
+            has_map_ = true;
+            RCLCPP_INFO(this->get_logger(), "Map received and stored.");
+        }
     }
 
     void startCallback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
@@ -62,6 +67,9 @@ private:
         RCLCPP_INFO(this->get_logger(), "Planning Path from Initial Location: [%.2f, %.2f] to Goal Location: [%.2f, %.2f]", start_x_, start_y_, goal_x_, goal_y_);
 
         AStarPlanner planner;
+        bool debug_mode = this->get_parameter("enable_planner_debug").as_bool();
+        planner.setDebugMode(debug_mode);
+        
         auto path_coords = planner.findPath(
             current_map_->data,
             current_map_->info.width,
@@ -78,12 +86,20 @@ private:
             path_msg.header.stamp = this->now();
             path_msg.header.frame_id = current_map_->header.frame_id;
             
-            std::string path_str = "Planned Path Coordinates:\n";
+            std::ostringstream path_str;
+            path_str << "Planned Path Coordinates:\n";
+            path_str << std::left 
+                     << std::setw(12) << "| World X" 
+                     << std::setw(12) << "| World Y" 
+                     << std::setw(15) << "| G-Cost" 
+                     << std::setw(15) << "| H-Cost" << "|\n";
+            path_str << "-----------------------------------------------------\n";
 
             for (size_t i = 0; i < path_coords.size(); i++) {
-                path_str += "[" + std::to_string(path_coords[i].x) + ", " + std::to_string(path_coords[i].y) + 
-                            ", g: " + std::to_string(path_coords[i].g_cost) + ", h: " + std::to_string(path_coords[i].h_cost) + "]";
-                if (i != path_coords.size() - 1) path_str += "\n -> ";
+                path_str << "| " << std::left << std::setw(10) << std::fixed << std::setprecision(2) << path_coords[i].x 
+                         << "| " << std::setw(10) << path_coords[i].y 
+                         << "| " << std::setw(13) << path_coords[i].g_cost 
+                         << "| " << std::setw(13) << path_coords[i].h_cost << "|\n";
                 
                 geometry_msgs::msg::PoseStamped pose;
                 pose.header = path_msg.header;
@@ -98,14 +114,7 @@ private:
             
             path_publisher_->publish(path_msg);
             RCLCPP_INFO(this->get_logger(), "Path successfully planned and published!");
-            RCLCPP_INFO(this->get_logger(), "%s\n", path_str.c_str());
-            
-            // --- SIMULATED MOVEMENT ---
-            // Assume the robot drives to the goal perfectly.
-            // We set the start position to the current goal, so the NEXT path starts from here.
-            start_x_ = goal_x_;
-            start_y_ = goal_y_;
-            RCLCPP_INFO(this->get_logger(), "Simulated Arrival: Robot is now at [%.2f, %.2f]. Ready for next goal!", start_x_, start_y_);
+            RCLCPP_INFO(this->get_logger(), "\n%s", path_str.str().c_str());
             
         } else {
             RCLCPP_ERROR(this->get_logger(), "FAILED: No valid path exists.");

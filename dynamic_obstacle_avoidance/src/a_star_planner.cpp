@@ -2,6 +2,7 @@
 #include <cmath>
 #include <queue>
 #include <iostream>
+#include <chrono>
 
 // Custom comparator for the priority queue
 struct CompareF {
@@ -35,7 +36,13 @@ std::vector<GridNode*> AStarPlanner::computePath(std::vector<std::vector<int>>& 
     start_node->h_cost = calculateHeuristic(start.x, start.y, goal.x, goal.y);
     open_list.push(start_node);
 
+    int step_count = 0;
+    auto total_start_time = std::chrono::high_resolution_clock::now();
+
     while (!open_list.empty()) {
+        auto step_start_time = std::chrono::high_resolution_clock::now();
+        step_count++;
+
         GridNode* current_node = open_list.top();
         open_list.pop();
 
@@ -46,6 +53,16 @@ std::vector<GridNode*> AStarPlanner::computePath(std::vector<std::vector<int>>& 
         closed_list[current_node->x][current_node->y] = true;
 
         if (current_node->x == goal.x && current_node->y == goal.y) {
+            if (debug_mode_) {
+                auto goal_found_time = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> total_duration = goal_found_time - total_start_time;
+                // Note: goal.x stores the Row (Y), and goal.y stores the Col (X).
+                // We print (X, Y) here so it matches the final table output visually.
+                std::cout << "[AStarPlanner] DEBUG: Calculated the right solution for the goal coordinates (" 
+                          << goal.y << ", " << goal.x << ") in " << step_count << " steps. Total time: " 
+                          << total_duration.count() << " ms." << std::endl;
+            }
+
             std::vector<GridNode*> final_path;
             GridNode* trace_node = current_node;
             
@@ -89,8 +106,23 @@ std::vector<GridNode*> AStarPlanner::computePath(std::vector<std::vector<int>>& 
 
             open_list.push(neighbor);
         }
+
+        if (debug_mode_) {
+            auto step_end_time = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::micro> step_duration = step_end_time - step_start_time;
+            std::cout << "[AStarPlanner] DEBUG: Step " << step_count 
+                      << " processed in " << step_duration.count() << " us. "
+                      << "Evaluating Node(" << current_node->y << ", " << current_node->x << ")" << std::endl;
+        }
     }
     
+    if (debug_mode_) {
+        auto fail_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> fail_duration = fail_time - total_start_time;
+        std::cout << "[AStarPlanner] DEBUG: FAILED to reach goal coordinates. Total time: " 
+                  << fail_duration.count() << " ms." << std::endl;
+    }
+
     return std::vector<GridNode*>(); 
 }
 
