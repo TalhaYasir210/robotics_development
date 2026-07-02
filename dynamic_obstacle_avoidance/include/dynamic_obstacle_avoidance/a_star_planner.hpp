@@ -60,11 +60,12 @@ public:
     std::vector<Point2D> convertGridPathToWorldPath(const std::vector<GridNode*>& grid_path, double origin_x, double origin_y, double resolution);
     double gridToWorld(int grid_index, double origin, double resolution);
 
-private:
+public: // Made public for unit testing
     // --- Internal Engine ---
     std::vector<GridNode*> computePath(const std::vector<std::vector<int>>& grid, GridNode start, GridNode goal);
     float calculateHeuristic(int x1, int y1, int x2, int y2);
     
+private:
     bool debug_mode_ = false;
 };
 
