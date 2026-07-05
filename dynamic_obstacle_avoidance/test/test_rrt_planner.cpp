@@ -219,7 +219,7 @@ TEST_F(RRTPlannerTest, Steer_StraightX) {
 TEST_F(RRTPlannerTest, Steer_StraightY) {
     TreeNode* start = new TreeNode(0.0, 0.0, nullptr);
     auto next = planner->steer(start, 0.0, 5.0, 2.0);
-    EXPECT_FLOAT_EQ(next.x, 0.0);
+    EXPECT_NEAR(next.x, 0.0, 1e-6);
     EXPECT_FLOAT_EQ(next.y, 2.0);
     delete start;
 }
@@ -241,7 +241,7 @@ TEST_F(RRTPlannerTest, Steer_NegativeDirection) {
     TreeNode* start = new TreeNode(0.0, 0.0, nullptr);
     auto next = planner->steer(start, -10.0, 0.0, 1.0);
     EXPECT_FLOAT_EQ(next.x, -1.0);
-    EXPECT_FLOAT_EQ(next.y, 0.0);
+    EXPECT_NEAR(next.y, 0.0, 1e-6);
     delete start;
 }
 

@@ -23,6 +23,13 @@ add_executable(planner_node
 )
 ament_target_dependencies(planner_node rclcpp nav_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
 
+# 2.5. Compile the RRT Node
+add_executable(node_for_rrt
+  src/node_for_rrt.cpp
+  src/rrt_planner.cpp
+)
+ament_target_dependencies(node_for_rrt rclcpp nav_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
+
 # 3. Compile the mock publisher
 add_executable(mock_map_publisher src/mock_map_publisher.cpp)
 ament_target_dependencies(mock_map_publisher rclcpp nav_msgs geometry_msgs)
@@ -30,6 +37,7 @@ ament_target_dependencies(mock_map_publisher rclcpp nav_msgs geometry_msgs)
 # 4. Install them so ROS 2 can run them
 install(TARGETS
   planner_node
+  node_for_rrt
   mock_map_publisher
   DESTINATION lib/${PROJECT_NAME}
 )
@@ -42,6 +50,12 @@ if(BUILD_TESTING)
     src/a_star_planner.cpp
   )
   target_include_directories(test_a_star_planner PUBLIC include)
+
+  ament_add_gtest(test_rrt_planner 
+    test/test_rrt_planner.cpp
+    src/rrt_planner.cpp
+  )
+  target_include_directories(test_rrt_planner PUBLIC include)
 endif()
 
 ament_package()
