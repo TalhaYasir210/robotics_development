@@ -12,6 +12,7 @@ find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 # 1. Tell the compiler where to find your .hpp blueprint files
 include_directories(include)
@@ -28,7 +29,7 @@ add_executable(node_for_rrt
   src/node_for_rrt.cpp
   src/rrt_planner.cpp
 )
-ament_target_dependencies(node_for_rrt rclcpp nav_msgs geometry_msgs tf2_ros tf2_geometry_msgs)
+ament_target_dependencies(node_for_rrt rclcpp nav_msgs geometry_msgs tf2_ros tf2_geometry_msgs visualization_msgs)
 
 # 3. Compile the mock publisher
 add_executable(mock_map_publisher src/mock_map_publisher.cpp)

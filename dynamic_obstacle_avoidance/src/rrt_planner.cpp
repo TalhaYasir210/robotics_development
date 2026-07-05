@@ -74,11 +74,25 @@ bool RRTPlanner::isPathCollisionFree(double x1, double y1, double x2, double y2,
         double cx = x1 + t * (x2 - x1);
         double cy = y1 + t * (y2 - y1);
         
-        int gx = worldToGrid(cx, origin_x, resolution);
-        int gy = worldToGrid(cy, origin_y, resolution);
+        double margin = resolution * 0.45;
+        std::vector<std::pair<double, double>> check_points = {
+            {cx, cy},
+            {cx + margin, cy + margin},
+            {cx - margin, cy + margin},
+            {cx + margin, cy - margin},
+            {cx - margin, cy - margin}
+        };
         
-        if (!isWithinBounds(gx, gy, width, height)) return false;
-        if (isObstacle(grid, gx, gy)) return false;
+        for (const auto& pt : check_points) {
+            int gx = worldToGrid(pt.first, origin_x, resolution);
+            int gy = worldToGrid(pt.second, origin_y, resolution);
+            
+            if (!isWithinBounds(gx, gy, width, height)) {
+                if (pt.first == cx && pt.second == cy) return false;
+                continue;
+            }
+            if (isObstacle(grid, gx, gy)) return false;
+        }
     }
     return true;
 }
@@ -90,11 +104,11 @@ Point2D RRTPlanner::getRandomPoint(double goal_x, double goal_y, double min_x, d
     std::uniform_real_distribution<double> dist_prob(0.0, 1.0);
     // 5% goal bias
     if (dist_prob(rng_) < 0.05) {
-        return {goal_x, goal_y, 0.0f, 0.0f};
+        return {goal_x, goal_y, 0.0f, 0.0f, 0.0};
     }
     std::uniform_real_distribution<double> dist_x(min_x, max_x);
     std::uniform_real_distribution<double> dist_y(min_y, max_y);
-    return {dist_x(rng_), dist_y(rng_), 0.0f, 0.0f};
+    return {dist_x(rng_), dist_y(rng_), 0.0f, 0.0f, 0.0};
 }
 
 TreeNode* RRTPlanner::getNearestNode(const std::vector<TreeNode*>& tree, double rand_x, double rand_y) {
@@ -126,11 +140,12 @@ bool RRTPlanner::isGoalReached(double x, double y, double goal_x, double goal_y,
 // ==========================================================
 // 8. Path Output Phase
 // ==========================================================
-std::vector<Point2D> RRTPlanner::extractPath(TreeNode* final_node) {
+std::vector<Point2D> RRTPlanner::extractPath(TreeNode* final_node, std::chrono::time_point<std::chrono::high_resolution_clock> start_time) {
     std::vector<Point2D> path;
     TreeNode* current = final_node;
     while (current != nullptr) {
-        path.push_back({current->x, current->y, 0.0f, 0.0f});
+        double time_ms = std::chrono::duration<double, std::milli>(current->creation_time - start_time).count();
+        path.push_back({current->x, current->y, 0.0f, 0.0f, time_ms});
         current = current->parent;
     }
     std::reverse(path.begin(), path.end());
@@ -168,6 +183,8 @@ std::vector<Point2D> RRTPlanner::findPath(
         return {};
     }
 
+    tree_path_.clear();
+
     std::vector<TreeNode*> tree;
     tree.push_back(new TreeNode(start_x, start_y));
 
@@ -200,7 +217,26 @@ std::vector<Point2D> RRTPlanner::findPath(
                     std::cout << "[RRTPlanner] DEBUG: Goal reached in " << i << " iterations. Total time: " << total_duration.count() << " ms." << std::endl;
                 }
                 
-                std::vector<Point2D> path = extractPath(new_node);
+                std::vector<Point2D> path = extractPath(new_node, total_start_time);
+                
+                // Construct adjacency list for DFS
+                std::map<TreeNode*, std::vector<TreeNode*>> children;
+                for (auto n : tree) {
+                    if (n->parent != nullptr) {
+                        children[n->parent].push_back(n);
+                    }
+                }
+                
+                // DFS to construct continuous backtracking path
+                std::function<void(TreeNode*)> dfs = [&](TreeNode* node) {
+                    tree_path_.push_back({node->x, node->y, 0.0f, 0.0f, 0.0});
+                    for (auto child : children[node]) {
+                        dfs(child);
+                        tree_path_.push_back({node->x, node->y, 0.0f, 0.0f, 0.0});
+                    }
+                };
+                if (!tree.empty()) dfs(tree[0]);
+                
                 for (auto n : tree) delete n;
                 return path;
             }
@@ -213,6 +249,24 @@ std::vector<Point2D> RRTPlanner::findPath(
         std::cout << "[RRTPlanner] DEBUG: Failed to reach goal after " << max_iters << " iterations. Total time: " << total_duration.count() << " ms." << std::endl;
     }
     
+    // Construct adjacency list for DFS
+    std::map<TreeNode*, std::vector<TreeNode*>> children;
+    for (auto n : tree) {
+        if (n->parent != nullptr) {
+            children[n->parent].push_back(n);
+        }
+    }
+    
+    // DFS to construct continuous backtracking path
+    std::function<void(TreeNode*)> dfs = [&](TreeNode* node) {
+        tree_path_.push_back({node->x, node->y, 0.0f, 0.0f, 0.0});
+        for (auto child : children[node]) {
+            dfs(child);
+            tree_path_.push_back({node->x, node->y, 0.0f, 0.0f, 0.0});
+        }
+    };
+    if (!tree.empty()) dfs(tree[0]);
+
     for (auto n : tree) delete n;
     return {};
 }

@@ -136,7 +136,8 @@ TEST_F(RRTPlannerTest, IsPathCollisionFree_BlockedEnd) {
 }
 TEST_F(RRTPlannerTest, IsPathCollisionFree_DiagonalClear) {
     std::vector<std::vector<int>> grid = {{0, 1, 1}, {1, 0, 1}, {1, 1, 0}};
-    EXPECT_TRUE(planner->isPathCollisionFree(0.0, 0.0, 0.2, 0.2, grid, 0.0, 0.0, 0.1));
+    // With safety padding, sliding perfectly between diagonal obstacles is now considered a collision.
+    EXPECT_FALSE(planner->isPathCollisionFree(0.0, 0.0, 0.2, 0.2, grid, 0.0, 0.0, 0.1));
 }
 
 // ==============================================================================
@@ -269,14 +270,16 @@ TEST_F(RRTPlannerTest, IsGoalReached_NegativeCoordinates) {
 // ==============================================================================
 TEST_F(RRTPlannerTest, ExtractPath_SingleNode) {
     TreeNode* goal = new TreeNode(0.0, 0.0, nullptr);
-    auto path = planner->extractPath(goal);
+    auto start_time = std::chrono::high_resolution_clock::now();
+    auto path = planner->extractPath(goal, start_time);
     EXPECT_EQ(path.size(), 1);
     delete goal;
 }
 TEST_F(RRTPlannerTest, ExtractPath_TwoNodes) {
     TreeNode* start = new TreeNode(0.0, 0.0, nullptr);
     TreeNode* goal = new TreeNode(1.0, 1.0, start);
-    auto path = planner->extractPath(goal);
+    auto start_time = std::chrono::high_resolution_clock::now();
+    auto path = planner->extractPath(goal, start_time);
     EXPECT_EQ(path.size(), 2);
     EXPECT_FLOAT_EQ(path[0].x, 0.0);
     delete start; delete goal;
@@ -286,7 +289,8 @@ TEST_F(RRTPlannerTest, ExtractPath_MultipleNodes) {
     TreeNode* n2 = new TreeNode(1.0, 1.0, n1);
     TreeNode* n3 = new TreeNode(2.0, 2.0, n2);
     TreeNode* n4 = new TreeNode(3.0, 3.0, n3);
-    auto path = planner->extractPath(n4);
+    auto start_time = std::chrono::high_resolution_clock::now();
+    auto path = planner->extractPath(n4, start_time);
     EXPECT_EQ(path.size(), 4);
     delete n1; delete n2; delete n3; delete n4;
 }
@@ -294,7 +298,8 @@ TEST_F(RRTPlannerTest, ExtractPath_ReversesCorrectly) {
     TreeNode* n1 = new TreeNode(0.0, 0.0, nullptr);
     TreeNode* n2 = new TreeNode(1.0, 1.0, n1);
     TreeNode* n3 = new TreeNode(2.0, 2.0, n2);
-    auto path = planner->extractPath(n3);
+    auto start_time = std::chrono::high_resolution_clock::now();
+    auto path = planner->extractPath(n3, start_time);
     if(path.size() == 3) {
         EXPECT_FLOAT_EQ(path[0].x, 0.0);
         EXPECT_FLOAT_EQ(path[2].x, 2.0);
@@ -304,7 +309,8 @@ TEST_F(RRTPlannerTest, ExtractPath_ReversesCorrectly) {
 TEST_F(RRTPlannerTest, ExtractPath_CheckValues) {
     TreeNode* start = new TreeNode(-1.0, 2.0, nullptr);
     TreeNode* goal = new TreeNode(3.5, -4.2, start);
-    auto path = planner->extractPath(goal);
+    auto start_time = std::chrono::high_resolution_clock::now();
+    auto path = planner->extractPath(goal, start_time);
     if(path.size() == 2) {
         EXPECT_FLOAT_EQ(path[0].x, -1.0); EXPECT_FLOAT_EQ(path[0].y, 2.0);
         EXPECT_FLOAT_EQ(path[1].x, 3.5);  EXPECT_FLOAT_EQ(path[1].y, -4.2);
@@ -316,6 +322,7 @@ TEST_F(RRTPlannerTest, ExtractPath_CheckValues) {
 // 12. findPath Tests (5 cases)
 // ==============================================================================
 TEST_F(RRTPlannerTest, FindPath_SuccessEmptyMap) {
+    planner->setDebugMode(true);
     std::vector<int8_t> flat_map(100, 0); // 10x10 free map
     auto path = planner->findPath(flat_map, 10, 10, 0.1, 0.0, 0.0, 0.0, 0.0, 0.9, 0.9);
     EXPECT_GT(path.size(), 0);

@@ -3,6 +3,7 @@
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 #include "dynamic_obstacle_avoidance/rrt_planner.hpp"
 #include <vector>
 #include <string>
@@ -29,6 +30,7 @@ public:
             
         // Publisher
         path_publisher_ = this->create_publisher<nav_msgs::msg::Path>("/planned_path", 10);
+        tree_publisher_ = this->create_publisher<nav_msgs::msg::Path>("/rrt_tree", 10);
             
         RCLCPP_INFO(this->get_logger(), "RRT Planner Node Started. Waiting for /map and /goal_pose...");
     }
@@ -66,9 +68,9 @@ private:
 
         RCLCPP_INFO(this->get_logger(), "Planning Path from Initial Location: [%.2f, %.2f] to Goal Location: [%.2f, %.2f]", start_x_, start_y_, goal_x_, goal_y_);
 
+        // Run RRT planner
         RRTPlanner planner;
-        bool debug_mode = this->get_parameter("enable_planner_debug").as_bool();
-        planner.setDebugMode(debug_mode);
+        planner.setDebugMode(true); // Enable internal RRT debug logging
         
         auto path_coords = planner.findPath(
             current_map_->data,
@@ -89,17 +91,17 @@ private:
             std::ostringstream path_str;
             path_str << "Planned Path Coordinates:\n";
             path_str << std::left 
+                     << std::setw(8) << "| Step"
                      << std::setw(12) << "| World X" 
                      << std::setw(12) << "| World Y" 
-                     << std::setw(15) << "| G-Cost" 
-                     << std::setw(15) << "| H-Cost" << "|\n";
-            path_str << "-----------------------------------------------------\n";
+                     << std::setw(20) << "| Time to Find (ms)" << "|\n";
+            path_str << "--------------------------------------------------------\n";
 
             for (size_t i = 0; i < path_coords.size(); i++) {
-                path_str << "| " << std::left << std::setw(10) << std::fixed << std::setprecision(2) << path_coords[i].x 
+                path_str << "| " << std::left << std::setw(6) << i 
+                         << "| " << std::setw(10) << std::fixed << std::setprecision(2) << path_coords[i].x 
                          << "| " << std::setw(10) << path_coords[i].y 
-                         << "| " << std::setw(13) << path_coords[i].g_cost 
-                         << "| " << std::setw(13) << path_coords[i].h_cost << "|\n";
+                         << "| " << std::setw(18) << std::fixed << std::setprecision(2) << path_coords[i].time_taken_ms << "|\n";
                 
                 geometry_msgs::msg::PoseStamped pose;
                 pose.header = path_msg.header;
@@ -115,6 +117,23 @@ private:
             path_publisher_->publish(path_msg);
             RCLCPP_INFO(this->get_logger(), "Path successfully planned and published!");
             RCLCPP_INFO(this->get_logger(), "\n%s", path_str.str().c_str());
+            
+            // Publish RRT Tree
+            auto tree_path_coords = planner.getTreeAsPath();
+            nav_msgs::msg::Path tree_msg;
+            tree_msg.header.stamp = this->now();
+            tree_msg.header.frame_id = current_map_->header.frame_id;
+            
+            for (const auto& pt : tree_path_coords) {
+                geometry_msgs::msg::PoseStamped pose;
+                pose.header = tree_msg.header;
+                pose.pose.position.x = pt.x;
+                pose.pose.position.y = pt.y;
+                pose.pose.position.z = 0.0;
+                pose.pose.orientation.w = 1.0;
+                tree_msg.poses.push_back(pose);
+            }
+            tree_publisher_->publish(tree_msg);
             
         } else {
             RCLCPP_ERROR(this->get_logger(), "FAILED: No valid path exists.");
@@ -139,6 +158,7 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr start_subscriber_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_subscriber_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_publisher_;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr tree_publisher_;
 };
 
 int main(int argc, char **argv) {

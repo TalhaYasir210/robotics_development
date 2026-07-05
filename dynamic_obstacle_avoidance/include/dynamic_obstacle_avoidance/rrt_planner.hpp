@@ -5,6 +5,10 @@
 #include <cmath>
 #include <cstdint>
 #include <random>
+#include <chrono>
+#include <utility>
+#include <map>
+#include <functional>
 
 // Reusing Point2D from A*
 #ifndef POINT2D_DEFINED
@@ -14,6 +18,7 @@ struct Point2D {
     double y;
     float g_cost;
     float h_cost;
+    double time_taken_ms;
 };
 #endif
 
@@ -22,8 +27,10 @@ struct TreeNode {
     double x;
     double y;
     TreeNode* parent;
+    std::chrono::time_point<std::chrono::high_resolution_clock> creation_time;
 
-    TreeNode(double x_pos, double y_pos, TreeNode* p_node = nullptr) : x(x_pos), y(y_pos), parent(p_node) {}
+    TreeNode(double x_pos, double y_pos, TreeNode* p_node = nullptr) 
+        : x(x_pos), y(y_pos), parent(p_node), creation_time(std::chrono::high_resolution_clock::now()) {}
 };
 
 class RRTPlanner {
@@ -45,6 +52,8 @@ public:
         double goal_y);
         
     void setDebugMode(bool debug) { debug_mode_ = debug; }
+
+    std::vector<Point2D> getTreeAsPath() const { return tree_path_; }
 
     // --- 2. Coordinate Conversion ---
     int worldToGrid(double world_coord, double origin, double resolution);
@@ -69,11 +78,12 @@ public:
     bool isGoalReached(double x, double y, double goal_x, double goal_y, double tolerance);
 
     // --- 8. Path Output Phase ---
-    std::vector<Point2D> extractPath(TreeNode* final_node);
+    std::vector<Point2D> extractPath(TreeNode* final_node, std::chrono::time_point<std::chrono::high_resolution_clock> start_time);
 
 private:
     bool debug_mode_ = false;
     std::mt19937 rng_;
+    std::vector<Point2D> tree_path_;
     
     // Helper to build 2D grid from 1D array
     std::vector<std::vector<int>> buildGridFromMap(const std::vector<int8_t>& flat_map_data, int width, int height);
