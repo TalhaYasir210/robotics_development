@@ -46,11 +46,19 @@ bool RRTPlanner::isObstacle(const std::vector<std::vector<int>>& grid, int x, in
 
 std::vector<std::vector<int>> RRTPlanner::buildGridFromMap(const std::vector<int8_t>& flat_map_data, int width, int height) {
     std::vector<std::vector<int>> grid(height, std::vector<int>(width, 0));
+    int inflation_cells = 4; // 4 cells * 0.05m = 0.20m obstacle inflation
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int index = x + (y * width);
             if (flat_map_data[index] >= 50) {
-                grid[y][x] = 1; 
+                // Inflate obstacle using a circle
+                for (int iy = std::max(0, y - inflation_cells); iy <= std::min(height - 1, y + inflation_cells); iy++) {
+                    for (int ix = std::max(0, x - inflation_cells); ix <= std::min(width - 1, x + inflation_cells); ix++) {
+                        if ((ix - x)*(ix - x) + (iy - y)*(iy - y) <= inflation_cells*inflation_cells) {
+                            grid[iy][ix] = 1; 
+                        }
+                    }
+                }
             }
         }
     }
