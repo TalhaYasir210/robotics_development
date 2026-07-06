@@ -35,18 +35,18 @@ ament_target_dependencies(node_for_rrt rclcpp nav_msgs geometry_msgs tf2_ros tf2
 add_executable(mock_map_publisher src/mock_map_publisher.cpp)
 ament_target_dependencies(mock_map_publisher rclcpp nav_msgs geometry_msgs)
 
-# 3.5. Compile the unified RRT Navigator
-add_executable(rrt_navigator_node 
-  src/rrt_navigator_node.cpp
+# 3.5. Compile the unified Navigator
+add_executable(velocity_controller_node 
+  src/velocity_controller_node.cpp
   src/rrt_planner.cpp
 )
-ament_target_dependencies(rrt_navigator_node rclcpp nav_msgs geometry_msgs tf2 tf2_geometry_msgs visualization_msgs)
+ament_target_dependencies(velocity_controller_node rclcpp nav_msgs geometry_msgs visualization_msgs tf2 tf2_geometry_msgs)
 
 # 4. Install them so ROS 2 can run them
 install(TARGETS
   planner_node
   node_for_rrt
-  rrt_navigator_node
+  velocity_controller_node
   mock_map_publisher
   DESTINATION lib/${PROJECT_NAME}
 )

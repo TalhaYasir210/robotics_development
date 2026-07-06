@@ -15,9 +15,9 @@
 
 using std::placeholders::_1;
 
-class RRTNavigatorNode : public rclcpp::Node {
+class VelocityControllerNode : public rclcpp::Node {
 public:
-    RRTNavigatorNode() : Node("rrt_navigator_node"), current_state_(State::IDLE) {
+    VelocityControllerNode() : Node("velocity_controller_node"), current_state_(State::IDLE) {
         // --- 1. Parameter Declarations ---
         this->declare_parameter<double>("linear_kp", 0.5);
         this->declare_parameter<double>("angular_kp", 1.5);
@@ -34,14 +34,14 @@ public:
         map_qos.transient_local();
         
         map_subscriber_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-            "/map", map_qos, std::bind(&RRTNavigatorNode::mapCallback, this, _1));
+            "/map", map_qos, std::bind(&VelocityControllerNode::mapCallback, this, _1));
             
         rclcpp::QoS odom_qos = rclcpp::SensorDataQoS();
         odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "/odom", odom_qos, std::bind(&RRTNavigatorNode::odomCallback, this, _1));
+            "/odom", odom_qos, std::bind(&VelocityControllerNode::odomCallback, this, _1));
             
         goal_subscriber_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-            "/goal_pose", 10, std::bind(&RRTNavigatorNode::goalCallback, this, _1));
+            "/goal_pose", 10, std::bind(&VelocityControllerNode::goalCallback, this, _1));
 
         // --- 3. Publishers ---
         path_publisher_ = this->create_publisher<nav_msgs::msg::Path>("/planned_path", 10);
@@ -50,7 +50,7 @@ public:
 
         // --- 4. Control Loop Timer ---
         control_timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100), std::bind(&RRTNavigatorNode::controlLoop, this));
+            std::chrono::milliseconds(100), std::bind(&VelocityControllerNode::controlLoop, this));
 
         RCLCPP_INFO(this->get_logger(), "Unified RRT Navigator Node Started. Waiting for /map and /odom...");
     }
@@ -310,7 +310,7 @@ private:
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<RRTNavigatorNode>());
+    rclcpp::spin(std::make_shared<VelocityControllerNode>());
     rclcpp::shutdown();
     return 0;
 }
