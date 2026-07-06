@@ -5,6 +5,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "visualization_msgs/msg/marker.hpp"
+#include "dynamic_obstacle_avoidance/a_star_planner.hpp"
 #include "dynamic_obstacle_avoidance/rrt_planner.hpp"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
@@ -140,12 +141,20 @@ private:
     // PLANNING LOGIC
     // =========================================================================
     void planPath(double start_x, double start_y, double goal_x, double goal_y) {
-        current_state_ = State::PLANNING;
-        publishStopCommand(); // Stop the robot while thinking
+        if (!current_map_) {
+            RCLCPP_WARN(this->get_logger(), "No map received yet!");
+            return;
+        }
 
-        RRTPlanner planner;
-        planner.setDebugMode(true); // Enabled so we see the internal generation logs
-        
+        // =========================================================================
+        // PLANNER SELECTION
+        // To switch planners, comment out one block and uncomment the other.
+        // =========================================================================
+
+        // --- Option 1: A* Planner (Currently Active) ---
+        RCLCPP_INFO(this->get_logger(), "Finding path with A* Planner...");
+        AStarPlanner planner;
+        // planner.setDebugMode(true);
         auto path_coords = planner.findPath(
             current_map_->data,
             current_map_->info.width,
@@ -156,6 +165,26 @@ private:
             start_x, start_y,
             goal_x, goal_y
         );
+        std::vector<Point2D> tree_path_coords; // A* doesn't publish a tree
+
+        // --- Option 2: RRT Planner (Commented Out) ---
+        /*
+        RCLCPP_INFO(this->get_logger(), "Finding path with RRT Planner...");
+        RRTPlanner planner;
+        // planner.setDebugMode(true);
+        auto path_coords = planner.findPath(
+            current_map_->data,
+            current_map_->info.width,
+            current_map_->info.height,
+            current_map_->info.resolution,
+            current_map_->info.origin.position.x,
+            current_map_->info.origin.position.y,
+            start_x, start_y,
+            goal_x, goal_y
+        );
+        auto tree_path_coords = planner.getTreeAsPath(); // RRT publishes its tree
+        */
+        // =========================================================================
 
         if (!path_coords.empty()) {
             // Prepare Path Message
@@ -180,8 +209,7 @@ private:
             // Publish Path to RViz
             path_publisher_->publish(path_msg);
             
-            // Publish RRT Tree to RViz
-            auto tree_path_coords = planner.getTreeAsPath();
+            // Publish RRT Tree to RViz (Will just be empty for A*)
             nav_msgs::msg::Path tree_msg;
             tree_msg.header.stamp = this->now();
             tree_msg.header.frame_id = current_map_->header.frame_id;

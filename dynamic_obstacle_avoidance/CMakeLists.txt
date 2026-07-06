@@ -38,6 +38,7 @@ ament_target_dependencies(mock_map_publisher rclcpp nav_msgs geometry_msgs)
 # 3.5. Compile the unified Navigator
 add_executable(velocity_controller_node 
   src/velocity_controller_node.cpp
+  src/a_star_planner.cpp
   src/rrt_planner.cpp
 )
 ament_target_dependencies(velocity_controller_node rclcpp nav_msgs geometry_msgs visualization_msgs tf2 tf2_geometry_msgs)

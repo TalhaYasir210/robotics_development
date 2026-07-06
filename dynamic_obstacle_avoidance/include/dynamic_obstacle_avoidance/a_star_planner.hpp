@@ -6,12 +6,16 @@
 #include <cstdint>
 
 // Used to return the final path
+#ifndef POINT2D_DEFINED
+#define POINT2D_DEFINED
 struct Point2D {
     double x;
     double y;
     float g_cost;
     float h_cost;
+    double time_taken_ms;
 };
+#endif
 
 // Represents a single cell in the grid
 struct GridNode {
