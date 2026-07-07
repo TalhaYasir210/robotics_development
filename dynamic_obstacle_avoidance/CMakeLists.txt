@@ -62,6 +62,12 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(DIRECTORY 
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME}
+)
+
 # 5. Compile and install the Nav2 Plugin Library
 add_library(nav2_custom_planner SHARED
   src/nav2_custom_planner.cpp
@@ -118,5 +124,7 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_nav2_custom_planner rclcpp nav_msgs geometry_msgs nav2_core nav2_costmap_2d pluginlib)
   target_link_libraries(test_nav2_custom_planner Eigen3::Eigen)
 endif()
+
+pluginlib_export_plugin_description_file(nav2_core global_planner_plugin.xml)
 
 ament_package()

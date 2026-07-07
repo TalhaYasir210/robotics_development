@@ -81,10 +81,17 @@ std::vector<Point2D> AStarPlanner::findPath(
 // ==========================================================
 std::vector<std::vector<int>> AStarPlanner::buildGridFromMap(const std::vector<int8_t>& flat_map_data, int width, int height) {
     std::vector<std::vector<int>> grid(height, std::vector<int>(width, 0));
-    int inflation_cells = 4; // 4 cells * 0.05m = 0.20m obstacle inflation
+    // int inflation_cells = 4; // 4 cells * 0.05m = 0.20m obstacle inflation
+    
+    // Nav2's global costmap already inflates obstacles based on the robot's footprint.
+    // Nav2CustomPlanner converts lethal/inscribed obstacles to 100.
+    // So we just treat anything >= 90 as a hard obstacle, with no need for manual inflation here!
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int index = x + (y * width);
+            
+            // --- Old Manual Inflation Logic (Commented out for Nav2 integration) ---
+            /*
             if (flat_map_data[index] >= 50) {
                 // Inflate obstacle using a circle
                 for (int iy = std::max(0, y - inflation_cells); iy <= std::min(height - 1, y + inflation_cells); iy++) {
@@ -94,6 +101,12 @@ std::vector<std::vector<int>> AStarPlanner::buildGridFromMap(const std::vector<i
                         }
                     }
                 }
+            }
+            */
+
+            // --- New Nav2 Logic ---
+            if (flat_map_data[index] >= 90 || flat_map_data[index] == -1) {
+                grid[y][x] = 1; 
             }
         }
     }
