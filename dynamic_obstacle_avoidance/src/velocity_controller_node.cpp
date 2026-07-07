@@ -7,12 +7,14 @@
 #include "visualization_msgs/msg/marker.hpp"
 #include "dynamic_obstacle_avoidance/a_star_planner.hpp"
 #include "dynamic_obstacle_avoidance/rrt_planner.hpp"
+#include "dynamic_obstacle_avoidance/lqr_controller.hpp"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <vector>
 #include <cmath>
 #include <iomanip>
 #include <sstream>
+#include <chrono>
 
 using std::placeholders::_1;
 
@@ -20,10 +22,22 @@ class VelocityControllerNode : public rclcpp::Node {
 public:
     VelocityControllerNode() : Node("velocity_controller_node"), current_state_(State::IDLE) {
         // --- 1. Parameter Declarations ---
-        this->declare_parameter<double>("linear_kp", 0.5);
-        this->declare_parameter<double>("angular_kp", 1.5);
+        this->declare_parameter<double>("q_distance", 2.0);
+        this->declare_parameter<double>("q_heading", 5.0);
+        this->declare_parameter<double>("r_v", 1.0);
+        this->declare_parameter<double>("r_omega", 1.0);
         this->declare_parameter<double>("max_linear_speed", 0.22);
         this->declare_parameter<double>("max_angular_speed", 2.84);
+        
+        // Initialize LQR
+        double dt = 0.1; // 100ms timer
+        lqr_controller_.init_lqr_parameters(
+            this->get_parameter("q_distance").as_double(),
+            this->get_parameter("q_heading").as_double(),
+            this->get_parameter("r_v").as_double(),
+            this->get_parameter("r_omega").as_double(),
+            dt
+        );
         
         // Offset for where the robot spawns in the map
         this->declare_parameter<double>("map_offset_x", -2.0);
@@ -77,6 +91,10 @@ private:
     // Path Following
     std::vector<geometry_msgs::msg::PoseStamped> current_path_;
     size_t current_waypoint_index_ = 0;
+    int last_logged_waypoint_ = -1;
+    rclcpp::Time path_start_time_;
+    double time_per_coord_ = 0.0;
+    double total_calc_time_ms_ = 0.0;
 
     // =========================================================================
     // CALLBACKS
@@ -154,7 +172,9 @@ private:
         // --- Option 1: A* Planner (Currently Active) ---
         RCLCPP_INFO(this->get_logger(), "Finding path with A* Planner...");
         AStarPlanner planner;
-        // planner.setDebugMode(true);
+        
+        auto calc_start = std::chrono::high_resolution_clock::now();
+        
         auto path_coords = planner.findPath(
             current_map_->data,
             current_map_->info.width,
@@ -165,6 +185,10 @@ private:
             start_x, start_y,
             goal_x, goal_y
         );
+        
+        auto calc_end = std::chrono::high_resolution_clock::now();
+        double total_calc_time_ms = std::chrono::duration<double, std::milli>(calc_end - calc_start).count();
+        
         std::vector<Point2D> tree_path_coords; // A* doesn't publish a tree
 
         // --- Option 2: RRT Planner (Commented Out) ---
@@ -225,20 +249,48 @@ private:
             
             RCLCPP_INFO(this->get_logger(), "Path successfully planned! Transitioning to FOLLOWING state.");
             
-            std::stringstream ss;
-            ss << "\n=== Planned Path Coordinates ===\n";
-            ss << " Index |   X    |   Y    \n";
-            ss << "-------|--------|--------\n";
+            // --- A* Logging System ---
+            total_calc_time_ms_ = total_calc_time_ms;
+            time_per_coord_ = total_calc_time_ms / (current_path_.empty() ? 1.0 : current_path_.size());
+            
+            RCLCPP_INFO(this->get_logger(), "=== A* Planned Path Coordinates ===");
+            RCLCPP_INFO(this->get_logger(), " Index |   X    |   Y    | Calc Time (ms) ");
+            RCLCPP_INFO(this->get_logger(), "-------|--------|--------|----------------");
             for (size_t i = 0; i < current_path_.size(); ++i) {
-                char buf[100];
-                snprintf(buf, sizeof(buf), "  %3zu  | %6.2f | %6.2f \n", 
-                         i, current_path_[i].pose.position.x, current_path_[i].pose.position.y);
-                ss << buf;
+                char buf[150];
+                snprintf(buf, sizeof(buf), "  %3zu  | %6.2f | %6.2f | %14.4f ", 
+                         i, current_path_[i].pose.position.x, current_path_[i].pose.position.y, time_per_coord_);
+                RCLCPP_INFO(this->get_logger(), "%s", buf);
             }
-            ss << "================================";
-            RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
+            RCLCPP_INFO(this->get_logger(), "-------|--------|--------|----------------");
+            RCLCPP_INFO(this->get_logger(), " Total Time to Calculate Path: %.4f ms", total_calc_time_ms_);
+
+            RCLCPP_INFO(this->get_logger(), "=== A* LQR Tracking Log ===");
+            RCLCPP_INFO(this->get_logger(), "   X    |   Y    | Dist Err | Head Err | LQR V  | LQR W  ");
+            RCLCPP_INFO(this->get_logger(), "--------|--------|----------|----------|--------|--------");
+
+            // --- RRT Logging System (Currently Commented Out) ---
+            /*
+            RCLCPP_INFO(this->get_logger(), "=== RRT Planned Path Coordinates ===");
+            RCLCPP_INFO(this->get_logger(), " Index |   X    |   Y    | Calc Time (ms) ");
+            RCLCPP_INFO(this->get_logger(), "-------|--------|--------|----------------");
+            for (size_t i = 0; i < current_path_.size(); ++i) {
+                char buf[150];
+                snprintf(buf, sizeof(buf), "  %3zu  | %6.2f | %6.2f | %14.4f ", 
+                         i, current_path_[i].pose.position.x, current_path_[i].pose.position.y, time_per_coord_);
+                RCLCPP_INFO(this->get_logger(), "%s", buf);
+            }
+            RCLCPP_INFO(this->get_logger(), "-------|--------|--------|----------------");
+            RCLCPP_INFO(this->get_logger(), " Total Time to Calculate Path: %.4f ms", total_calc_time_ms_);
+
+            RCLCPP_INFO(this->get_logger(), "=== RRT LQR Tracking Log ===");
+            RCLCPP_INFO(this->get_logger(), "   X    |   Y    | Dist Err | Head Err | LQR V  | LQR W  ");
+            RCLCPP_INFO(this->get_logger(), "--------|--------|----------|----------|--------|--------");
+            */
             
             current_waypoint_index_ = 0;
+            last_logged_waypoint_ = -1;
+            path_start_time_ = this->now();
             current_state_ = State::FOLLOWING;
             
         } else {
@@ -258,6 +310,12 @@ private:
         if (current_waypoint_index_ >= current_path_.size()) {
             // Path complete!
             publishStopCommand();
+            double travel_time = (this->now() - path_start_time_).seconds();
+            
+            RCLCPP_INFO(this->get_logger(), "================================================================================");
+            RCLCPP_INFO(this->get_logger(), " Total Time Taken to Reach Goal: %.2f seconds", travel_time);
+            RCLCPP_INFO(this->get_logger(), "================================================================================");
+            
             RCLCPP_INFO(this->get_logger(), "Goal reached! Robot position is now the new start point. Returning to IDLE.");
             current_state_ = State::IDLE;
             return;
@@ -286,31 +344,48 @@ private:
         while (heading_error > M_PI) heading_error -= 2.0 * M_PI;
         while (heading_error < -M_PI) heading_error += 2.0 * M_PI;
 
-        // Fetch gains
-        double linear_kp = this->get_parameter("linear_kp").as_double();
-        double angular_kp = this->get_parameter("angular_kp").as_double();
         double max_linear_speed = this->get_parameter("max_linear_speed").as_double();
         double max_angular_speed = this->get_parameter("max_angular_speed").as_double();
 
         geometry_msgs::msg::TwistStamped cmd_vel;
         cmd_vel.header.stamp = this->now();
         cmd_vel.header.frame_id = "base_footprint";
+        
+        // Use LQR to compute optimal velocities
+        lqr_controller_.update_state_error(distance_to_target, heading_error);
+        double v_cmd = 0.0;
+        double omega_cmd = 0.0;
+        lqr_controller_.compute_control_command(v_cmd, omega_cmd);
 
-        // Simple Proportional Control Logic
+        // LQR Control Logic with turning priority
         if (std::abs(heading_error) > 0.5) {
             // Prioritize turning if we are not facing the target
             cmd_vel.twist.linear.x = 0.0;
         } else {
             // Move forward and turn smoothly to correct heading
-            cmd_vel.twist.linear.x = std::min(max_linear_speed, linear_kp * distance_to_target);
+            cmd_vel.twist.linear.x = std::max(0.0, std::min(max_linear_speed, v_cmd));
             cmd_vel.twist.linear.x *= (1.0 - std::abs(heading_error) / M_PI);
         }
         
-        cmd_vel.twist.angular.z = angular_kp * heading_error;
+        cmd_vel.twist.angular.z = omega_cmd;
         
         // Clamp angular velocity to prevent spinning too fast
         if (cmd_vel.twist.angular.z > max_angular_speed) cmd_vel.twist.angular.z = max_angular_speed;
         if (cmd_vel.twist.angular.z < -max_angular_speed) cmd_vel.twist.angular.z = -max_angular_speed;
+
+        // --- A* Tracking Row Logging (Continuous) ---
+        char buf[150];
+        snprintf(buf, sizeof(buf), " %6.2f | %6.2f | %8.2f | %8.2f | %6.2f | %6.2f", 
+                 target_x, target_y, distance_to_target, heading_error, v_cmd, omega_cmd);
+        RCLCPP_INFO(this->get_logger(), "%s", buf);
+
+        // --- RRT Tracking Row Logging (Currently Commented Out) ---
+        /*
+        char buf_rrt[150];
+        snprintf(buf_rrt, sizeof(buf_rrt), " %6.2f | %6.2f | %8.2f | %8.2f | %6.2f | %6.2f", 
+                 target_x, target_y, distance_to_target, heading_error, v_cmd, omega_cmd);
+        RCLCPP_INFO(this->get_logger(), "%s", buf_rrt);
+        */
 
         cmd_vel_publisher_->publish(cmd_vel);
     }
@@ -334,6 +409,7 @@ private:
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_publisher_;
     
     rclcpp::TimerBase::SharedPtr control_timer_;
+    LQRController lqr_controller_;
 };
 
 int main(int argc, char **argv) {

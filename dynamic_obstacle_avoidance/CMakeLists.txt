@@ -13,9 +13,13 @@ find_package(geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # 1. Tell the compiler where to find your .hpp blueprint files
-include_directories(include)
+include_directories(
+  include
+  ${EIGEN3_INCLUDE_DIRS}
+)
 
 # 2. Compile BOTH the ROS 2 node and the A* math engine into one program
 add_executable(planner_node 
@@ -40,8 +44,10 @@ add_executable(velocity_controller_node
   src/velocity_controller_node.cpp
   src/a_star_planner.cpp
   src/rrt_planner.cpp
+  src/lqr_controller.cpp
 )
 ament_target_dependencies(velocity_controller_node rclcpp nav_msgs geometry_msgs visualization_msgs tf2 tf2_geometry_msgs)
+target_link_libraries(velocity_controller_node Eigen3::Eigen)
 
 # 4. Install them so ROS 2 can run them
 install(TARGETS
@@ -66,6 +72,13 @@ if(BUILD_TESTING)
     src/rrt_planner.cpp
   )
   target_include_directories(test_rrt_planner PUBLIC include)
+  
+  ament_add_gtest(test_lqr_controller 
+    test/test_lqr_controller.cpp
+    src/lqr_controller.cpp
+  )
+  target_include_directories(test_lqr_controller PUBLIC include)
+  target_link_libraries(test_lqr_controller Eigen3::Eigen)
 endif()
 
 ament_package()
