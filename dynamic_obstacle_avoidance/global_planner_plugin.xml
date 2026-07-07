@@ -1,0 +1,7 @@
+<library path="nav2_custom_planner">
+  <class name="dynamic_obstacle_avoidance/Nav2CustomPlanner" type="dynamic_obstacle_avoidance::Nav2CustomPlanner" base_class_type="nav2_core::GlobalPlanner">
+    <description>
+      A custom A* and RRT global planner plugin for Nav2.
+    </description>
+  </class>
+</library>

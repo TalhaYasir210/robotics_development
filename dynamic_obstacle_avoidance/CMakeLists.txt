@@ -14,6 +14,9 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(nav2_core REQUIRED)
+find_package(nav2_costmap_2d REQUIRED)
+find_package(pluginlib REQUIRED)
 
 # 1. Tell the compiler where to find your .hpp blueprint files
 include_directories(
@@ -42,8 +45,9 @@ ament_target_dependencies(mock_map_publisher rclcpp nav_msgs geometry_msgs)
 # 3.5. Compile the unified Navigator
 add_executable(velocity_controller_node 
   src/velocity_controller_node.cpp
-  src/a_star_planner.cpp
-  src/rrt_planner.cpp
+  # Uncomment the two lines below if you want to directly use A* or RRT internally instead of Nav2 subscription
+  # src/a_star_planner.cpp
+  # src/rrt_planner.cpp
   src/lqr_controller.cpp
 )
 ament_target_dependencies(velocity_controller_node rclcpp nav_msgs geometry_msgs visualization_msgs tf2 tf2_geometry_msgs)
@@ -56,6 +60,30 @@ install(TARGETS
   velocity_controller_node
   mock_map_publisher
   DESTINATION lib/${PROJECT_NAME}
+)
+
+# 5. Compile and install the Nav2 Plugin Library
+add_library(nav2_custom_planner SHARED
+  src/nav2_custom_planner.cpp
+  src/a_star_planner.cpp
+  src/rrt_planner.cpp
+)
+ament_target_dependencies(nav2_custom_planner
+  rclcpp
+  nav_msgs
+  geometry_msgs
+  nav2_core
+  nav2_costmap_2d
+  pluginlib
+)
+target_link_libraries(nav2_custom_planner Eigen3::Eigen)
+
+install(TARGETS nav2_custom_planner
+  DESTINATION lib
+)
+
+install(FILES global_planner_plugin.xml
+  DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
@@ -79,6 +107,16 @@ if(BUILD_TESTING)
   )
   target_include_directories(test_lqr_controller PUBLIC include)
   target_link_libraries(test_lqr_controller Eigen3::Eigen)
+
+  ament_add_gtest(test_nav2_custom_planner 
+    test/test_nav2_custom_planner.cpp
+    src/nav2_custom_planner.cpp
+    src/a_star_planner.cpp
+    src/rrt_planner.cpp
+  )
+  target_include_directories(test_nav2_custom_planner PUBLIC include)
+  ament_target_dependencies(test_nav2_custom_planner rclcpp nav_msgs geometry_msgs nav2_core nav2_costmap_2d pluginlib)
+  target_link_libraries(test_nav2_custom_planner Eigen3::Eigen)
 endif()
 
 ament_package()
