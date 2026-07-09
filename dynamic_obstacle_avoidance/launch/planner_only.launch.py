@@ -12,11 +12,6 @@ def generate_launch_description():
     params_file = os.path.join(my_pkg_dir, 'config', 'nav2_params.yaml')
 
     return LaunchDescription([
-        # This is the magic! It intercepts Nav2's velocity commands and sends them
-        # to a dummy topic so they NEVER reach the robot's wheels. This guarantees 
-        # that only your custom Velocity Controller handles the driving!
-        SetRemap(src='/cmd_vel', dst='/cmd_vel_dummy_nav2'),
-        
         # Launch the standard Nav2 stack with our custom parameters
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -24,7 +19,9 @@ def generate_launch_description():
             ),
             launch_arguments={
                 'params_file': params_file,
-                'use_sim_time': 'true'
+                'use_sim_time': 'true',
+                'use_velocity_smoother': 'true',
+                'use_collision_monitor': 'true'
             }.items()
         )
     ])

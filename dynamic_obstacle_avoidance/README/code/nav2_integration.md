@@ -1,8 +1,13 @@
-# Nav2 Integration with LQR Velocity Controller
+# Dynamic Obstacle Avoidance & Nav2 Integration
 
-This guide explains how to run the `dynamic_obstacle_avoidance` package using the **Nav2 Custom Global Planner** integration. In this setup, Nav2 acts strictly as the "brain" (path planner) using your custom A* or RRT plugin, while your custom **LQR Velocity Controller** remains the absolute only node driving the robot.
+This guide explains how to run the `dynamic_obstacle_avoidance` package using the **Nav2 Custom Global Planner** integration. In this setup, Nav2 acts as both the "brain" (path planner) using your custom A* or RRT plugin, and the local controller (using a tightly-tuned DWB local planner) to enable true **dynamic obstacle avoidance**.
 
-## Prerequisites
+Your custom **LQR Velocity Controller** logic has been preserved in a `passive_tracking_logger_node`, which strictly logs and compares the ideal LQR calculations against the real DWB executions without interfering with the robot's movement.
+
+---
+
+## 🛠️ Prerequisites & Build
+
 1. Build your workspace:
    ```bash
    cd ~/ros2_ws
@@ -19,7 +24,25 @@ This guide explains how to run the `dynamic_obstacle_avoidance` package using th
 
 ---
 
-## Execution Steps
+## 🧹 Gazebo & ROS 2 Clean-Up (Troubleshooting)
+
+If you are experiencing ghost processes, map linking errors, or your robot won't spawn properly, use these commands to completely reset the Gazebo and ROS 2 communication daemons before launching:
+
+```bash
+# Kill any lingering Gazebo processes
+killall -9 gzserver gzclient
+killall -9 gz ruby
+
+# Stop the hidden ROS 2 communication daemon
+ros2 daemon stop
+
+# Start a fresh, clean daemon
+ros2 daemon start
+```
+
+---
+
+## 🚀 Execution Steps
 
 You will need to open **6 separate terminals** to launch the complete environment.
 
@@ -42,16 +65,16 @@ Because the robot spawns at `[-2.0, -0.5]` but its odometry starts counting from
 ros2 run tf2_ros static_transform_publisher -2.0 -0.5 0 0 0 0 map odom
 ```
 
-### Terminal 4: Launch Nav2 (Planner Only Wrapper)
-We use a custom launch file that boots up Nav2 with our custom `nav2_params.yaml`, but explicitly intercepts and disables Nav2's movement commands. Nav2 will calculate the path but will never touch the wheels.
+### Terminal 4: Launch Nav2
+We use a custom launch file that boots up the standard Nav2 stack but forces it to use the finely-tuned parameters in `nav2_params.yaml`. This links your A* Global Planner plugin and configures the DWB local planner for aggressive obstacle dodging.
 ```bash
 ros2 launch dynamic_obstacle_avoidance planner_only.launch.py
 ```
 
-### Terminal 5: Start the Velocity Controller
-Run your dedicated LQR path follower node. It will sit in `IDLE` state and passively wait for Nav2 to publish a path to the `/plan` topic.
+### Terminal 5: Start the Passive Tracking Logger
+Run your dedicated tracking node. It passively monitors the Nav2 path and outputs a real-time console log comparing your robot's path-following errors and DWB commanded velocities.
 ```bash
-ros2 run dynamic_obstacle_avoidance velocity_controller_node --ros-args -p use_sim_time:=true
+ros2 run dynamic_obstacle_avoidance passive_tracking_logger_node --ros-args -p use_sim_time:=true
 ```
 
 ### Terminal 6: Launch RViz2 for Visualization
@@ -62,13 +85,13 @@ rviz2
 **In RViz2, make sure to add the following displays:**
 1. **Map**: Set topic to `/map`
 2. **Path**: Set topic to `/plan`. (Recommended: Set *Line Style* to *Billboards*, *Line Width* to `0.04`, and *Color* to bright Green).
-3. **2D Goal Pose Tool**: Use the tool at the top of RViz to click your desired destination!
+3. **2D Goal Pose Tool**: Use the tool at the top of RViz to click your desired destination! Watch the DWB local planner dynamically avoid obstacles on its way there.
 
 *(Note: You might see a "ghost" robot stuck at `[0,0]` in Gazebo/RViz. You can safely ignore or delete it from the Gazebo Entity tree; your real robot is the one at `[-2.0, -0.5]`.)*
 
 ---
 
-## How to Switch Planners (A* vs RRT)
+## 🔀 How to Switch Planners (A* vs RRT)
 
 By default, the `Nav2CustomPlanner` is configured to use your **A* Planner**. 
 If you want to switch to **RRT**:
