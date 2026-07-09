@@ -57,8 +57,15 @@ std::vector<Point2D> AStarPlanner::findPath(
 
     // 4. Validate Start and Goal against obstacles
     if (isObstacle(grid, start_grid_y, start_grid_x)) {
-        std::cout << "[AStarPlanner] FAILED: Start position is inside an obstacle!" << std::endl;
-        return {};
+        std::cout << "[AStarPlanner] WARNING: Start position is inside an obstacle! Clearing neighborhood to allow planning." << std::endl;
+        // Clear a 5x5 area around the start node so it can escape the inflated footprint
+        for (int dy = -2; dy <= 2; ++dy) {
+            for (int dx = -2; dx <= 2; ++dx) {
+                if (isWithinBounds(start_grid_x + dx, start_grid_y + dy, width, height)) {
+                    grid[start_grid_y + dy][start_grid_x + dx] = 0;
+                }
+            }
+        }
     }
     if (isObstacle(grid, goal_grid_y, goal_grid_x)) {
         std::cout << "[AStarPlanner] FAILED: Goal position is inside an obstacle!" << std::endl;

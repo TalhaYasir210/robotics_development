@@ -2,7 +2,6 @@
 
 This guide explains how to run the `dynamic_obstacle_avoidance` package using the **Nav2 Custom Global Planner** integration. In this setup, Nav2 acts as both the "brain" (path planner) using your custom A* or RRT plugin, and the local controller (using a tightly-tuned DWB local planner) to enable true **dynamic obstacle avoidance**.
 
-Your custom **LQR Velocity Controller** logic has been preserved in a `passive_tracking_logger_node`, which strictly logs and compares the ideal LQR calculations against the real DWB executions without interfering with the robot's movement.
 
 ---
 

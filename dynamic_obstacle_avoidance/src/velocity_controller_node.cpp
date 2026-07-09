@@ -42,8 +42,8 @@ public:
         this->declare_parameter<double>("map_offset_y", -0.5);
         
         // --- 2. Subscribers ---
-        plan_subscriber_ = this->create_subscription<nav_msgs::msg::Path>(
-            "/plan", 10, std::bind(&VelocityControllerNode::planCallback, this, _1));
+        //plan_subscriber_ = this->create_subscription<nav_msgs::msg::Path>(
+          //  "/plan", 10, std::bind(&VelocityControllerNode::planCallback, this, _1));
             
         rclcpp::QoS odom_qos = rclcpp::SensorDataQoS();
         odom_subscriber_ = this->create_subscription<nav_msgs::msg::Odometry>(

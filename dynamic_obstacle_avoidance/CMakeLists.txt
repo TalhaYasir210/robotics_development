@@ -59,12 +59,18 @@ add_executable(passive_tracking_logger_node
 ament_target_dependencies(passive_tracking_logger_node rclcpp nav_msgs geometry_msgs visualization_msgs tf2 tf2_geometry_msgs)
 target_link_libraries(passive_tracking_logger_node Eigen3::Eigen)
 
+add_executable(dynamic_obstacle_detector_node
+  src/dynamic_obstacle_detector_node.cpp
+)
+ament_target_dependencies(dynamic_obstacle_detector_node rclcpp nav_msgs geometry_msgs sensor_msgs)
+
 # 4. Install them so ROS 2 can run them
 install(TARGETS
   planner_node
   node_for_rrt
   velocity_controller_node
   passive_tracking_logger_node
+  dynamic_obstacle_detector_node
   mock_map_publisher
   DESTINATION lib/${PROJECT_NAME}
 )
