@@ -58,74 +58,34 @@ If you want to switch to **RRT**:
 ## 🚀 Execution Steps
 *(Follow these commands exactly to set up and run the complete environment)*
 
-You will need to open **8 separate terminals** to launch the complete Nav2 setup, visualization, and dynamic obstacle bots.
+We have simplified the launch process into a single bringup file. You will only need **2 terminals**: one to launch the entire simulation and Nav2 stack, and an optional second terminal if you want to manually drive the dynamic obstacle bot.
 
-### Terminal 1: Workspace Setup & Build
-Open a terminal (`Ctrl+Alt+T`) and build the workspace.
+### Terminal 1: Workspace Setup & Launch Everything
+Open a terminal (`Ctrl+Alt+T`), build the workspace, and launch the single bringup file. This will automatically start Gazebo, the map server, Nav2, our custom nodes, and RViz.
 ```bash
 # Compile the package
 cd ~/ros2_ws
 colcon build --packages-select dynamic_obstacle_avoidance
 
-# Source your workspace (Do this in every new terminal)
+# Source your workspace
 source ~/ros2_ws/install/setup.bash
 
 # Export your TurtleBot3 model
 export TURTLEBOT3_MODEL=waffle
+
+# Launch the entire simulation environment
+ros2 launch dynamic_obstacle_avoidance bringup.launch.py
 ```
 
-### Terminal 2: Launch Gazebo Simulation
-Start the Gazebo world. The robot will physically spawn at `[-2.0, -0.5]` between the pillars.
-```bash
-source ~/ros2_ws/install/setup.bash
-export TURTLEBOT3_MODEL=waffle
-ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
-```
-
-### Terminal 3: Start the Map Server
-Load the static map of the world so Nav2 knows where the walls are. 
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 run nav2_map_server map_server --ros-args -p yaml_filename:=/home/deadsec/ros2_ws/src/turtlebot3/turtlebot3_navigation2/map/map.yaml -p use_sim_time:=true
-```
-*(Note: If the map does not appear immediately in RViz later, you may need to activate the lifecycle node in another terminal by running: `ros2 run nav2_util lifecycle_bringup map_server`)*
-
-### Terminal 4: Publish the Map-to-Odom Offset
-Because the robot spawns at `[-2.0, -0.5]` but its odometry starts counting from `[0.0, 0.0]`, we must tell RViz and Nav2 about this offset so the map aligns perfectly with the robot's odometry.
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 run tf2_ros static_transform_publisher -2.0 -0.5 0 0 0 0 map odom
-```
-
-### Terminal 5: Launch Nav2 & Dynamic Obstacles
-We use a custom launch file that boots up the standard Nav2 stack with our finely-tuned parameters. This links your A* Global Planner plugin, configures the DWB local planner, starts the dynamic obstacle detector, and spawns the secondary obstacle bot in Gazebo.
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 launch dynamic_obstacle_avoidance planner_only.launch.py
-```
-
-### Terminal 6: Start the Passive Tracking Logger
-Run your dedicated tracking node. It passively monitors the Nav2 path and outputs a real-time console log comparing your robot's path-following errors and DWB commanded velocities.
-```bash
-source ~/ros2_ws/install/setup.bash
-ros2 run dynamic_obstacle_avoidance passive_tracking_logger_node --ros-args -p use_sim_time:=true
-```
-
-### Terminal 7: RViz2 Visualization & Manual Obstacle Control
-You'll use this terminal to launch RViz2 to visualize the simulation and send goal poses.
-```bash
-source ~/ros2_ws/install/setup.bash
-rviz2
-```
-**In RViz2, make sure to add the following displays:**
+**In RViz2, make sure to add the following displays (if not automatically loaded):**
 1. **Map**: Set topic to `/map`
 2. **Path**: Set topic to `/plan`. (Recommended: Set *Line Style* to *Billboards*, *Line Width* to `0.04`, and *Color* to bright Green).
 3. **2D Goal Pose Tool**: Use the tool at the top of RViz to click your desired destination! Watch the robot calculate the global path and navigate.
 
 *(Note: You might see a "ghost" robot stuck at `[0,0]` in Gazebo/RViz. You can safely ignore or delete it from the Gazebo Entity tree; your real robot is the one at `[-2.0, -0.5]`.)*
 
-### Terminal 8: Control the Dynamic Obstacle Bot (Optional)
-The `planner_only.launch.py` file also spawned a secondary obstacle bot in Gazebo. You can manually drive this bot around using your keyboard to test the main bot's dynamic obstacle avoidance.
+### Terminal 2: Control the Dynamic Obstacle Bot (Optional)
+The `bringup.launch.py` file also spawned a secondary obstacle bot in Gazebo. You can manually drive this bot around using your keyboard to test the main bot's dynamic obstacle avoidance.
 ```bash
 source ~/ros2_ws/install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap cmd_vel:=/obstacle_bot/cmd_vel
