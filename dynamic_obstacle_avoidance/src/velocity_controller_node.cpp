@@ -92,12 +92,12 @@ private:
     // 1. Plan Callback from Nav2
     void planCallback(const nav_msgs::msg::Path::SharedPtr msg) {
         if (!has_odom_) {
-            RCLCPP_WARN(this->get_logger(), "Received path from Nav2, but no Odometry yet. Cannot follow.");
+            RCLCPP_ERROR(this->get_logger(), "[VelocityControllerNode::planCallback] ERROR: Received path from Nav2, but Odometry is unavailable. Cannot start following.");
             return;
         }
 
         if (msg->poses.empty()) {
-            RCLCPP_WARN(this->get_logger(), "Received empty path from Nav2.");
+            RCLCPP_ERROR(this->get_logger(), "[VelocityControllerNode::planCallback] ERROR: Received empty path from Nav2. Planning failed or invalid goal.");
             return;
         }
 

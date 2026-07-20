@@ -96,7 +96,7 @@ nav_msgs::msg::Path Nav2CustomPlanner::createPlan(
   // ==========================================
 
   if (point_path.empty()) {
-    RCLCPP_WARN(logger_, "Failed to find a path!");
+    RCLCPP_ERROR(logger_, "[Nav2CustomPlanner::createPlan] ERROR: Failed to find a valid global path! Goal might be unreachable or inside an obstacle.");
     return global_path;
   }
 

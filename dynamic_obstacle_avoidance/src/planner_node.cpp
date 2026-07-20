@@ -117,7 +117,7 @@ private:
             RCLCPP_INFO(this->get_logger(), "\n%s", path_str.str().c_str());
             
         } else {
-            RCLCPP_ERROR(this->get_logger(), "FAILED: No valid path exists.");
+            RCLCPP_ERROR(this->get_logger(), "[PathPlannerNode::planPath] ERROR: No valid path exists from start to goal.");
         }
     }
 

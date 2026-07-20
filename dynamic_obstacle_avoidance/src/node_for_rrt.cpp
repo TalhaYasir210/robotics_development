@@ -136,7 +136,7 @@ private:
             tree_publisher_->publish(tree_msg);
             
         } else {
-            RCLCPP_ERROR(this->get_logger(), "FAILED: No valid path exists.");
+            RCLCPP_ERROR(this->get_logger(), "[RRTPlannerNode::planPath] ERROR: No valid path exists from start to goal.");
         }
     }
 

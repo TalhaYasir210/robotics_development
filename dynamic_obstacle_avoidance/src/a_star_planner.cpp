@@ -47,11 +47,11 @@ std::vector<Point2D> AStarPlanner::findPath(
 
     // 3. Bound checks
     if (!isWithinBounds(start_grid_y, start_grid_x, height, width)) {
-        std::cout << "[AStarPlanner] Start position is outside the map!" << std::endl;
+        std::cerr << "[AStarPlanner::findPath] ERROR: Start position is outside the map bounds!" << std::endl;
         return {};
     }
     if (!isWithinBounds(goal_grid_y, goal_grid_x, height, width)) {
-        std::cout << "[AStarPlanner] Goal position is outside the map!" << std::endl;
+        std::cerr << "[AStarPlanner::findPath] ERROR: Goal position is outside the map bounds!" << std::endl;
         return {};
     }
 
@@ -68,7 +68,7 @@ std::vector<Point2D> AStarPlanner::findPath(
         }
     }
     if (isObstacle(grid, goal_grid_y, goal_grid_x)) {
-        std::cout << "[AStarPlanner] FAILED: Goal position is inside an obstacle!" << std::endl;
+        std::cerr << "[AStarPlanner::findPath] ERROR: Goal position is inside an obstacle! Cannot plan to this location." << std::endl;
         return {};
     }
 
@@ -212,7 +212,7 @@ std::vector<GridNode*> AStarPlanner::computePath(const std::vector<std::vector<i
     if (debug_mode_) {
         auto fail_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> fail_duration = fail_time - total_start_time;
-        std::cout << "[AStarPlanner] DEBUG: FAILED to reach goal coordinates. Total time: " 
+        std::cerr << "[AStarPlanner::computePath] ERROR: Failed to reach goal coordinates. No path exists. Total time: " 
                   << fail_duration.count() << " ms." << std::endl;
     }
 

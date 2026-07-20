@@ -38,7 +38,7 @@ To make the robot intelligent and modular, the code utilizes the standard ROS 2 
 
 ---
 
-## 🔀 How to Switch Planners (A* vs RRT)
+##  How to Switch Planners (A* vs RRT)
 
 By default, the `Nav2CustomPlanner` is configured to use your **A* Planner**. 
 If you want to switch to **RRT**:
@@ -55,7 +55,7 @@ If you want to switch to **RRT**:
 > [!NOTE]
 > If you are experiencing ghost processes, map linking errors, or your robot won't spawn properly, refer to the Troubleshooting section at the bottom to clean up lingering processes before launching.
 
-## 🚀 Execution Steps
+## Execution Steps
 *(Follow these commands exactly to set up and run the complete environment)*
 
 We have simplified the launch process into a single bringup file. You will only need **2 terminals**: one to launch the entire simulation and Nav2 stack, and an optional second terminal if you want to manually drive the dynamic obstacle bot.
@@ -93,7 +93,7 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap cmd_vel:
 
 ---
 
-## 🧹 Gazebo & ROS 2 Clean-Up (Troubleshooting)
+## Gazebo & ROS 2 Clean-Up (Troubleshooting)
 
 > [!NOTE]
 > If you are experiencing ghost processes, map linking errors, or your robot won't spawn properly, use these commands to completely reset the Gazebo and ROS 2 communication daemons before launching:
@@ -112,7 +112,7 @@ ros2 daemon start
 
 ---
 
-## 🛑 Safety Failsafes & Notes
+## Safety Failsafes & Notes
 
 - **Dynamic Braking:** The `dynamic_obstacle_detector_node` uses Euclidean clustering to calculate the absolute velocity of surrounding objects. If an object is moving towards the robot at a high speed (`> 0.15 m/s`) within the configured danger zone, it overrides the Nav2 local planner and safely brings the robot to a halt.
 - **Nav2 Failsafes:** If the local planner is completely blocked, Nav2's built-in recovery behaviors (like clearing costmaps or spinning) will engage to try and find a new route.

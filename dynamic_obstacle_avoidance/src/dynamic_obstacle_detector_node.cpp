@@ -65,7 +65,10 @@ private:
         }
         
         double dt = current_time - last_scan_time_;
-        if (dt <= 0.0) return;
+        if (dt <= 0.0) {
+            RCLCPP_ERROR(this->get_logger(), "[DynamicObstacleDetectorNode::scanCallback] ERROR: Invalid dt (%.4f <= 0). Cannot compute velocities.", dt);
+            return;
+        }
         last_scan_time_ = current_time;
 
         std::vector<Point2D> points;
@@ -183,7 +186,7 @@ private:
             // Require consistent tracking (age >= 4) and ignore crazy teleportations (speed < 3.0)
             if (in_danger_zone && new_c.age >= 4 && abs_speed > dyn_thresh && abs_speed < 3.0) {
                 dynamic_obstacle_in_danger_zone = true;
-                RCLCPP_WARN(this->get_logger(), "Dynamic Obstacle Detected! Speed: %.2f m/s, Dist: %.2f m. BRAKING!", 
+                RCLCPP_ERROR(this->get_logger(), "[DynamicObstacleDetectorNode::scanCallback] ERROR: Dynamic Obstacle Detected! Speed: %.2f m/s, Dist: %.2f m. TRIGGERING EMERGENCY BRAKE!", 
                             abs_speed, new_c.centroid_x);
             }
         }

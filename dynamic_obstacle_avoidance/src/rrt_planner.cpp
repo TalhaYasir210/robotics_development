@@ -183,11 +183,11 @@ std::vector<Point2D> RRTPlanner::findPath(
     int goal_gy = worldToGrid(goal_y, origin_y, resolution);
 
     if (!isWithinBounds(start_gx, start_gy, width, height) || isObstacle(grid, start_gx, start_gy)) {
-        if (debug_mode_) std::cout << "[RRTPlanner] Start is invalid or in obstacle." << std::endl;
+        std::cerr << "[RRTPlanner::findPath] ERROR: Start position is outside map bounds or inside an obstacle!" << std::endl;
         return {};
     }
     if (!isWithinBounds(goal_gx, goal_gy, width, height) || isObstacle(grid, goal_gx, goal_gy)) {
-        if (debug_mode_) std::cout << "[RRTPlanner] Goal is invalid or in obstacle." << std::endl;
+        std::cerr << "[RRTPlanner::findPath] ERROR: Goal position is outside map bounds or inside an obstacle!" << std::endl;
         return {};
     }
 
@@ -254,7 +254,7 @@ std::vector<Point2D> RRTPlanner::findPath(
     if (debug_mode_) {
         auto fail_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> total_duration = fail_time - total_start_time;
-        std::cout << "[RRTPlanner] DEBUG: Failed to reach goal after " << max_iters << " iterations. Total time: " << total_duration.count() << " ms." << std::endl;
+        std::cerr << "[RRTPlanner::findPath] ERROR: Failed to reach goal after " << max_iters << " iterations. Total time: " << total_duration.count() << " ms." << std::endl;
     }
     
     // Construct adjacency list for DFS
