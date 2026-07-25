@@ -50,4 +50,11 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_nav2_manager rclcpp rclcpp_action)
 endif()
 
+install(DIRECTORY
+  launch
+  worlds
+  models
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()
