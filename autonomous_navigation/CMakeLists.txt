@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 find_package(action_msgs REQUIRED)
@@ -19,7 +20,21 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES geometry_msgs
 )
 
+add_library(nav2_manager_core src/nav2_manager.cpp)
+target_include_directories(nav2_manager_core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(nav2_manager_core
+  rclcpp
+  rclcpp_action
+  geometry_msgs
+  nav2_msgs
+  action_msgs
+)
+rosidl_target_interfaces(nav2_manager_core ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
 if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files
@@ -29,6 +44,10 @@ if(BUILD_TESTING)
   # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_nav2_manager test/test_nav2_manager.cpp)
+  target_link_libraries(test_nav2_manager nav2_manager_core)
+  ament_target_dependencies(test_nav2_manager rclcpp rclcpp_action)
 endif()
 
 ament_package()
