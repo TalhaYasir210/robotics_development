@@ -38,6 +38,12 @@ private:
   // Subscriber to our custom message
   rclcpp::Subscription<autonomous_navigation::msg::NavigationCommand>::SharedPtr command_sub_;
 
+  // State to track if we have an active goal
+  bool has_active_goal_{false};
+  // Goal handles to allow cancellation
+  GoalHandleNavigate::SharedPtr active_goal_handle_navigate_;
+  GoalHandleWaypoints::SharedPtr active_goal_handle_waypoints_;
+
   // Callbacks for NavigateToPose Action Server
   void goal_response_callback_nav(const GoalHandleNavigate::SharedPtr & goal_handle);
   void feedback_callback_nav(
