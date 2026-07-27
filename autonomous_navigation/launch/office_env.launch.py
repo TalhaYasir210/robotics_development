@@ -14,14 +14,14 @@ def generate_launch_description():
     # Set a default TurtleBot3 model if the user hasn't exported one
     if 'TURTLEBOT3_MODEL' not in os.environ:
         os.environ['TURTLEBOT3_MODEL'] = 'waffle'
-        
+
     pkg_autonomous_nav = get_package_share_directory('autonomous_navigation')
     pkg_tb3_gazebo = get_package_share_directory('turtlebot3_gazebo')
     ros_gz_sim = get_package_share_directory('ros_gz_sim')
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    x_pose = LaunchConfiguration('x_pose', default='-2.0')
-    y_pose = LaunchConfiguration('y_pose', default='-0.5')
+    x_pose = LaunchConfiguration('x_pose', default='-3.0')
+    y_pose = LaunchConfiguration('y_pose', default='1.0')
 
     # Path to our self-contained world file
     world = os.path.join(

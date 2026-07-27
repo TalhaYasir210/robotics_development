@@ -54,6 +54,10 @@ install(DIRECTORY
   launch
   worlds
   models
+  config
+  rviz
+  scripts
+  maps
   DESTINATION share/${PROJECT_NAME}
 )
 

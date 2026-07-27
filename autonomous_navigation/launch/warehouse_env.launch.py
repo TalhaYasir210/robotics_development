@@ -14,7 +14,7 @@ def generate_launch_description():
     # Set a default TurtleBot3 model if the user hasn't exported one
     if 'TURTLEBOT3_MODEL' not in os.environ:
         os.environ['TURTLEBOT3_MODEL'] = 'waffle'
-        
+
     pkg_autonomous_nav = get_package_share_directory('autonomous_navigation')
     pkg_tb3_gazebo = get_package_share_directory('turtlebot3_gazebo')
     ros_gz_sim = get_package_share_directory('ros_gz_sim')
