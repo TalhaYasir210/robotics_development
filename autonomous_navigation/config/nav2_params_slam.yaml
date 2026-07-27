@@ -151,12 +151,12 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      footprint: "[[-0.14, -0.155], [0.14, -0.155], [0.14, 0.155], [-0.14, 0.155]]"
+      footprint: "[[-0.205, -0.155], [0.077, -0.155], [0.077, 0.155], [-0.205, 0.155]]"
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.25
-        cost_scaling_factor: 3.0
+        inflation_radius: 0.35
+        cost_scaling_factor: 5.0
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
@@ -164,9 +164,15 @@ local_costmap:
         scan:
           topic: /scan
           max_obstacle_height: 2.0
+          min_obstacle_height: 0.10
           clearing: true
           marking: true
           data_type: "LaserScan"
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.35
+          obstacle_max_range: 3.0
+          obstacle_min_range: 0.35
+          inf_is_valid: true
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: true
@@ -180,13 +186,15 @@ local_costmap:
         scan:
           topic: /scan
           max_obstacle_height: 2.0
+          min_obstacle_height: 0.10
           clearing: true
           marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.20
-          obstacle_max_range: 2.5
-          obstacle_min_range: 0.20
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.35
+          obstacle_max_range: 3.0
+          obstacle_min_range: 0.35
+          inf_is_valid: true
       static_layer:
         map_subscribe_transient_local: true
       always_send_full_costmap: true
@@ -199,7 +207,7 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_footprint
       transform_tolerance: 0.5
-      footprint: "[[-0.14, -0.155], [0.14, -0.155], [0.14, 0.155], [-0.14, 0.155]]"
+      footprint: "[[-0.205, -0.155], [0.077, -0.155], [0.077, 0.155], [-0.205, 0.155]]"
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "voxel_layer", "inflation_layer"]
@@ -210,13 +218,15 @@ global_costmap:
         scan:
           topic: /scan
           max_obstacle_height: 2.0
+          min_obstacle_height: 0.10
           clearing: true
           marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
-          obstacle_min_range: 0.0
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.35
+          obstacle_max_range: 3.0
+          obstacle_min_range: 0.35
+          inf_is_valid: true
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: true
@@ -230,21 +240,23 @@ global_costmap:
         scan:
           topic: /scan
           max_obstacle_height: 2.0
+          min_obstacle_height: 0.10
           clearing: true
           marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
-          obstacle_min_range: 0.0
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.35
+          obstacle_max_range: 3.0
+          obstacle_min_range: 0.35
+          inf_is_valid: true
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: true
         transform_tolerance: 0.1
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.25
-        cost_scaling_factor: 3.0
+        inflation_radius: 0.35
+        cost_scaling_factor: 5.0
       always_send_full_costmap: true
 
 map_server:

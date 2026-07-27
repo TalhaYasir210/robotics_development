@@ -47,3 +47,29 @@ We have created an automated SLAM mapping setup where the robot uses frontier ex
    ./scripts/save_map.sh my_new_map
    ```
    This will save the `.pgm` and `.yaml` map files into the `maps/` directory.
+
+### 4. Saving and Loading SLAM Checkpoints (Resume Mapping)
+
+There is a major difference between saving a **Static Map** (for pure navigation later) and saving a **SLAM Checkpoint** (to resume exploring the same house tomorrow). The `map_saver_cli` command shown above saves a *Static Map*.
+
+To pause and resume your SLAM exploration progress, use the **Serialization** feature in SLAM Toolbox:
+
+**Saving a Checkpoint:**
+1. While `auto_slam` is running, open the **RViz** window.
+2. In the left panel, locate the **SlamToolboxPlugin** panel.
+3. In the text box next to "Serialize Map", paste the absolute path to your maps folder and provide a checkpoint name, for example:
+   `/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/office_checkpoint`
+4. Click the **Serialize Map** button. It will save a `.posegraph` and `.data` file.
+
+**Loading a Checkpoint:**
+To have the robot automatically load your checkpoint the next time you launch `auto_slam.launch.py`:
+1. Open the configuration file: `config/mapper_params_online_async.yaml`
+2. Scroll to the `ros__parameters` section.
+3. Add or uncomment the `map_file_name` and `map_start_pose` lines to point to your saved checkpoint:
+   ```yaml
+   map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/office_checkpoint"
+   map_start_pose: [0.0, 0.0, 0.0]
+   ```
+4. Rebuild your workspace with `colcon build --packages-select autonomous_navigation`.
+5. Launch `auto_slam` again! The robot will load the old map, and `explore_lite` will automatically see the remaining frontiers and resume exploring! 
+*(Note: To start a brand-new map, simply comment out the `map_file_name` line in the YAML file).*
