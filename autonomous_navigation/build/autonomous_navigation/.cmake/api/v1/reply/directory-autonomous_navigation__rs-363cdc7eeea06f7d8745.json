@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "autonomous_navigation__rs",
+		"source" : "build/autonomous_navigation/autonomous_navigation__rs"
+	}
+}

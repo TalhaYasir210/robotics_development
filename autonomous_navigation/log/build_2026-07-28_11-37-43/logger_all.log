@@ -1,0 +1,122 @@
+[0.074s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--packages-select', 'autonomous_navigation']
+[0.074s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=24, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=['autonomous_navigation'], packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x781c34aa5eb0>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x781c34aa5850>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x781c34aa5850>>, mixin_verb=('build',))
+[0.095s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.095s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.095s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.095s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.095s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.095s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.095s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation'
+[0.095s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.095s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.096s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.096s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.096s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.096s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.096s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.096s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.096s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.111s] DEBUG:colcon.colcon_core.package_identification:Package '.' with type 'ros.ament_cmake' and name 'autonomous_navigation'
+[0.111s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.111s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.111s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.111s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.111s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.121s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.121s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.122s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 18 installed packages in /home/deadsec/ros2_ws/install
+[0.123s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 393 installed packages in /opt/ros/jazzy
+[0.123s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'cmake_args' from command line to 'None'
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'cmake_target' from command line to 'None'
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'cmake_clean_cache' from command line to 'False'
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'cmake_clean_first' from command line to 'False'
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'cmake_force_configure' from command line to 'False'
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'ament_cmake_args' from command line to 'None'
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'catkin_cmake_args' from command line to 'None'
+[0.147s] Level 5:colcon.colcon_core.verb:set package 'autonomous_navigation' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.147s] DEBUG:colcon.colcon_core.verb:Building package 'autonomous_navigation' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation', 'merge_install': False, 'path': '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation', 'symlink_install': False, 'test_result_base': None}
+[0.147s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.147s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.148s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation' with build type 'ament_cmake'
+[0.148s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation'
+[0.149s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.149s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.149s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.155s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/deadsec/ros2_ws/install/turtlebot3_teleop:/home/deadsec/ros2_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation -DCMAKE_INSTALL_PREFIX=/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation
+[2.904s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/deadsec/ros2_ws/install/turtlebot3_teleop:/home/deadsec/ros2_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation -DCMAKE_INSTALL_PREFIX=/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation
+[2.905s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/deadsec/ros2_ws/install/turtlebot3_teleop:/home/deadsec/ros2_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation -- -j24 -l24
+[11.917s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/deadsec/ros2_ws/install/turtlebot3_teleop:/home/deadsec/ros2_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation -- -j24 -l24
+[11.924s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/deadsec/ros2_ws/install/turtlebot3_teleop:/home/deadsec/ros2_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation
+[11.986s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(autonomous_navigation)
+[11.986s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/deadsec/ros2_ws/install/turtlebot3_teleop:/home/deadsec/ros2_ws/install/turtlebot3_example:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation
+[11.988s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation' for CMake module files
+[11.989s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation' for CMake config files
+[11.989s] Level 1:colcon.colcon_core.shell:create_environment_hook('autonomous_navigation', 'cmake_prefix_path')
+[11.989s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/cmake_prefix_path.ps1'
+[11.990s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/cmake_prefix_path.dsv'
+[11.990s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/cmake_prefix_path.sh'
+[11.991s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/lib'
+[11.991s] Level 1:colcon.colcon_core.shell:create_environment_hook('autonomous_navigation', 'ld_library_path_lib')
+[11.991s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/ld_library_path_lib.ps1'
+[11.991s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/ld_library_path_lib.dsv'
+[11.992s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/ld_library_path_lib.sh'
+[11.992s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/bin'
+[11.992s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/lib/pkgconfig/autonomous_navigation.pc'
+[11.992s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/lib/python3.12/site-packages'
+[11.992s] Level 1:colcon.colcon_core.shell:create_environment_hook('autonomous_navigation', 'pythonpath')
+[11.992s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/pythonpath.ps1'
+[11.993s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/pythonpath.dsv'
+[11.993s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/pythonpath.sh'
+[11.993s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/bin'
+[11.994s] INFO:colcon.colcon_core.shell:Creating package script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.ps1'
+[11.994s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.dsv'
+[11.994s] INFO:colcon.colcon_core.shell:Creating package script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.sh'
+[11.995s] INFO:colcon.colcon_core.shell:Creating package script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.bash'
+[11.995s] INFO:colcon.colcon_core.shell:Creating package script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.zsh'
+[11.995s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/colcon-core/packages/autonomous_navigation)
+[11.995s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(autonomous_navigation)
+[11.995s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation' for CMake module files
+[11.996s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation' for CMake config files
+[11.996s] Level 1:colcon.colcon_core.shell:create_environment_hook('autonomous_navigation', 'cmake_prefix_path')
+[11.996s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/cmake_prefix_path.ps1'
+[11.996s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/cmake_prefix_path.dsv'
+[11.996s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/cmake_prefix_path.sh'
+[11.997s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/lib'
+[11.997s] Level 1:colcon.colcon_core.shell:create_environment_hook('autonomous_navigation', 'ld_library_path_lib')
+[11.997s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/ld_library_path_lib.ps1'
+[11.997s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/ld_library_path_lib.dsv'
+[11.997s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/ld_library_path_lib.sh'
+[11.997s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/bin'
+[11.997s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/lib/pkgconfig/autonomous_navigation.pc'
+[11.997s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/lib/python3.12/site-packages'
+[11.997s] Level 1:colcon.colcon_core.shell:create_environment_hook('autonomous_navigation', 'pythonpath')
+[11.997s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/pythonpath.ps1'
+[11.998s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/pythonpath.dsv'
+[11.998s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/hook/pythonpath.sh'
+[11.998s] Level 1:colcon.colcon_core.environment:checking '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/bin'
+[11.998s] INFO:colcon.colcon_core.shell:Creating package script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.ps1'
+[11.998s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.dsv'
+[11.999s] INFO:colcon.colcon_core.shell:Creating package script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.sh'
+[11.999s] INFO:colcon.colcon_core.shell:Creating package script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.bash'
+[11.999s] INFO:colcon.colcon_core.shell:Creating package script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/autonomous_navigation/package.zsh'
+[11.999s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/autonomous_navigation/share/colcon-core/packages/autonomous_navigation)
+[11.999s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[12.000s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[12.000s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[12.000s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[12.003s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[12.003s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[12.003s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[12.015s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[12.015s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/local_setup.ps1'
+[12.016s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/_local_setup_util_ps1.py'
+[12.016s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/setup.ps1'
+[12.017s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/local_setup.sh'
+[12.017s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/_local_setup_util_sh.py'
+[12.017s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/setup.sh'
+[12.018s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/local_setup.bash'
+[12.018s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/setup.bash'
+[12.019s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/local_setup.zsh'
+[12.019s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/install/setup.zsh'

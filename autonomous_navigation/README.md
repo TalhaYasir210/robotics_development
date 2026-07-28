@@ -139,10 +139,7 @@ We have set up environment-specific toggles in our main configuration file:
    ```yaml
     # --- ENVIRONMENT SPECIFIC PARAMS ---
     # [OFFICE] Use 0.25 for large open spaces
-    # min_frontier_size: 0.25
-    
-    # [WAREHOUSE] Use 0.10 for cluttered spaces with small gaps
-    min_frontier_size: 0.10
+    min_frontier_size: 0.25
     # -----------------------------------
    ```
 
@@ -150,10 +147,7 @@ We have set up environment-specific toggles in our main configuration file:
    ```yaml
           # --- ENVIRONMENT SPECIFIC PARAMS ---
           # [OFFICE] Use 0.10 as default for flat surfaces
-          # min_obstacle_height: 0.10
-          
-          # [WAREHOUSE] Use 0.15 to ignore hazard tape bumps and laser pitching
-          min_obstacle_height: 0.15
+          min_obstacle_height: 0.10
           # -----------------------------------
    ```
 
@@ -161,9 +155,6 @@ We have set up environment-specific toggles in our main configuration file:
    ```yaml
       # --- ENVIRONMENT SPECIFIC PARAMS ---
       # [OFFICE] Use 0.20 for safe navigation
-      # desired_linear_vel: 0.20
-      
-      # [WAREHOUSE] Use 0.20 to avoid crashing/rolling
       desired_linear_vel: 0.20
       # -----------------------------------
    ```
