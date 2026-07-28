@@ -18,27 +18,33 @@ colcon build
 source install/setup.bash
 ```
 
-## How to Run: Auto SLAM Mapping (Step 5)
+## How to Run: Auto and Manual SLAM Mapping (Step 5)
 
-We have created an automated SLAM mapping setup where the robot uses frontier exploration to automatically drive around and map an unknown environment. 
+We have created an automated SLAM mapping setup where the robot uses frontier exploration to automatically drive around and map an unknown environment. You can also choose to map manually.
 
-1. **Launch the Auto SLAM environment:**
+1. **Launch the SLAM environment:**
    You can choose between the `office` or `warehouse` environment by passing the `env` argument.
+   You can also choose between `auto` or `manual` exploration by passing the `mode` argument.
    
-   To run in the office environment (default):
+   To run Auto SLAM in the office environment (default):
    ```bash
-   ros2 launch autonomous_navigation auto_slam.launch.py env:=office
+   ros2 launch autonomous_navigation auto_slam.launch.py env:=office mode:=auto
    ```
    
-   To run in the warehouse environment:
+   To run Manual SLAM in the warehouse environment:
    ```bash
-   ros2 launch autonomous_navigation auto_slam.launch.py env:=warehouse
+   ros2 launch autonomous_navigation auto_slam.launch.py env:=warehouse mode:=manual
+   ```
+   *Note: change the name of the map office/warehouse which you want to load , In manual mode, the robot will not move on its own. You must open a new terminal and run a teleop node to drive it. Make sure to remap the topic so our stamper node can process it:*
+   ```bash
+   ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=cmd_vel_unstamped
    ```
 
 2. **Watch the Exploration:**
    - Gazebo will launch with the selected environment.
-   - RViz will automatically open. You will see the robot start driving towards the green/blue frontiers (unknown areas).
-   - Wait until the robot finishes exploring the entire environment.
+   - RViz will automatically open. 
+   - In `auto` mode, you will see the robot start driving towards the green/blue frontiers (unknown areas).
+   - Wait until the robot finishes exploring the entire environment (or drive it manually until the map is complete).
 
 3. **Save the Generated Map:**
    Once the robot stops moving and the map is complete, open a new terminal, source the workspace, and run our helper script:
@@ -58,7 +64,10 @@ To pause and resume your SLAM exploration progress, use the **Serialization** fe
 1. While `auto_slam` is running, open the **RViz** window.
 2. In the left panel, locate the **SlamToolboxPlugin** panel.
 3. In the text box next to "Serialize Map", paste the absolute path to your maps folder and provide a checkpoint name, for example:
-   `/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/office_checkpoint`
+   `/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/office_checkpoint_1`
+or 
+   `/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/warehouse_checkpoint_1`
+Note: you can chaneg the checkpoint name to anything you want (office_checkpoint_1) etc
 4. Click the **Serialize Map** button. It will save a `.posegraph` and `.data` file.
 
 **Loading a Checkpoint:**
