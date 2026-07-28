@@ -1,3 +1,21 @@
+# CRITICAL CONSTRAINT: Environment Specific Parameter Management
+
+**WARNING TO AGENT:** DO NOT EVER change a configuration value (in `explore.yaml`, `nav2_params_slam.yaml`, or any other config) without preserving the previous environment's value! Failure to do so breaks the modularity of the project.
+
+When making parameter changes to fix issues for a specific map or environment:
+1. **Never overwrite or delete** previously working parameters for other environments.
+2. Instead, comment out the old parameters, add the new ones, and clearly label them with the target environment (e.g., `[OFFICE]` vs `[WAREHOUSE]`). 
+   *Example Format:*
+   ```yaml
+      # --- ENVIRONMENT SPECIFIC PARAMS ---
+      # [OFFICE] Use 0.25 for X
+      # param_name: 0.25
+      
+      # [WAREHOUSE] Use 0.10 for Y
+      param_name: 0.10
+      # -----------------------------------
+   ```
+3. **Always update the `README.md`** immediately in the same step to describe what these parameters do, why they were changed, and explicitly instruct the user on how to toggle them when switching between different maps.
 # Autonomous Navigation - Project Context & State
 
 **Note to Gemini Agent (or self):** If you are reading this in a new session, this file contains the architectural decisions and current progress for the `autonomous_navigation` project. 

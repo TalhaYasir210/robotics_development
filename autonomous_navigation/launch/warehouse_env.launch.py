@@ -21,8 +21,8 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     # Different starting pose for warehouse so it's not inside a shelf
-    x_pose = LaunchConfiguration('x_pose', default='-2.0')
-    y_pose = LaunchConfiguration('y_pose', default='-0.5')
+    x_pose = LaunchConfiguration('x_pose', default='0.0')
+    y_pose = LaunchConfiguration('y_pose', default='0.0')
 
     # Path to our self-contained world file
     world = os.path.join(

@@ -23,8 +23,8 @@ source install/setup.bash
 We have created an automated SLAM mapping setup where the robot uses frontier exploration to automatically drive around and map an unknown environment. You can also choose to map manually.
 
 1. **Launch the SLAM environment:**
-   You can choose between the `office` or `warehouse` environment by passing the `env` argument.
-   You can also choose between `auto` or `manual` exploration by passing the `mode` argument.
+   You can choose between the `office` or `warehouse` environment by passing the `env` argument = office or warehouse.
+   ou can choose between the modes by just changing the mode = auto or manual in the cammnad prompt.
    
    To run Auto SLAM in the office environment (default):
    ```bash
@@ -71,14 +71,101 @@ Note: you can chaneg the checkpoint name to anything you want (office_checkpoint
 4. Click the **Serialize Map** button. It will save a `.posegraph` and `.data` file.
 
 **Loading a Checkpoint:**
-To have the robot automatically load your checkpoint the next time you launch `auto_slam.launch.py`:
+By default, the robot starts with a fresh map. To have the robot automatically load your checkpoint the next time you launch `auto_slam.launch.py`:
 1. Open the configuration file: `config/mapper_params_online_async.yaml`
-2. Scroll to the `ros__parameters` section.
-3. Add or uncomment the `map_file_name` and `map_start_pose` lines to point to your saved checkpoint:
-   ```yaml
-   map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/office_checkpoint"
-   map_start_pose: [0.0, 0.0, 0.0]
-   ```
+2. Scroll to the `ros__parameters` section (around line 23).
+3. Uncomment (remove the `#`) from the `map_file_name` and `map_start_pose` lines and set the path to your checkpoint.
+
+For example, to load the **office** checkpoint:
+```yaml
+    map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/office_checkpoint_1"
+    map_start_pose: [0.0, 0.0, 0.0]
+```
+
+To load the **warehouse** checkpoint:
+```yaml
+    map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/warehouse_checkpoint_1"
+    map_start_pose: [0.0, 0.0, 0.0]
+```
+
+*Note: Make sure to re-comment these lines (add a `#` back in front of them) when you want to start a brand new map!*
 4. Rebuild your workspace with `colcon build --packages-select autonomous_navigation`.
 5. Launch `auto_slam` again! The robot will load the old map, and `explore_lite` will automatically see the remaining frontiers and resume exploring! 
 *(Note: To start a brand-new map, simply comment out the `map_file_name` line in the YAML file).*
+
+### 5. Fine-Tuning Environment Parameters
+
+Different environments (like an open `office` vs a cluttered `warehouse`) sometimes require slightly different navigation parameters for optimal exploration.
+
+For example, if the robot gets stuck in an infinite loop without moving, it usually means the `xy_goal_tolerance` is too large for a tight space.
+
+We have set up environment-specific toggles in our main configuration file:
+1. Open the configuration file: `config/nav2_params_slam.yaml`
+2. Scroll to the `goal_checker` section (around line 118) or the `inflation_layer` sections (around lines 165 & 265).
+3. Comment or uncomment the parameters based on the map you are running:
+   ```yaml
+      # --- ENVIRONMENT SPECIFIC PARAMS ---
+      # [OFFICE] Use 0.25 if mapping the open office
+      # xy_goal_tolerance: 0.25
+      
+      # [WAREHOUSE] Use 0.10 for the cluttered warehouse to prevent infinite loops
+      xy_goal_tolerance: 0.10
+      # -----------------------------------
+   ```
+   *Similarly for the Inflation Radius (controls how wide the "danger zone" around walls is):*
+   ```yaml
+      # --- ENVIRONMENT SPECIFIC PARAMS ---
+      # [OFFICE] Use 0.35 for the open office
+      # inflation_radius: 0.35
+      
+      # [WAREHOUSE] Use 0.15 for the cluttered warehouse corridors
+      inflation_radius: 0.15
+      # -----------------------------------
+   ```
+   *And for the Laser Blind Spot in `nav2_params_slam.yaml` (search for `raytrace_min_range` in the costmaps):*
+   ```yaml
+          # --- ENVIRONMENT SPECIFIC PARAMS ---
+          # [OFFICE] Use 0.35 to ignore robot footprint
+          # raytrace_min_range: 0.35
+          # obstacle_min_range: 0.35
+          
+          # [WAREHOUSE] Use 0.12 so robot isn't blind to nearby boxes
+          raytrace_min_range: 0.12
+          obstacle_min_range: 0.12
+          # -----------------------------------
+   ```
+
+4. You can also tune the **Frontier Size** in `config/explore.yaml` if the robot refuses to enter tight spaces:
+   ```yaml
+    # --- ENVIRONMENT SPECIFIC PARAMS ---
+    # [OFFICE] Use 0.25 for large open spaces
+    # min_frontier_size: 0.25
+    
+    # [WAREHOUSE] Use 0.10 for cluttered spaces with small gaps
+    min_frontier_size: 0.10
+    # -----------------------------------
+   ```
+
+5. Finally, if the robot hallucinates obstacles in front of itself when driving over bumps, tune the **Laser Ignorance Height** (search for `min_obstacle_height` in the costmaps):
+   ```yaml
+          # --- ENVIRONMENT SPECIFIC PARAMS ---
+          # [OFFICE] Use 0.10 as default for flat surfaces
+          # min_obstacle_height: 0.10
+          
+          # [WAREHOUSE] Use 0.15 to ignore hazard tape bumps and laser pitching
+          min_obstacle_height: 0.15
+          # -----------------------------------
+   ```
+
+6. To prevent the robot from crashing or rolling over, ensure the `desired_linear_vel` and `regulated_linear_scaling_min_radius` in `FollowPath` are set to safe values:
+   ```yaml
+      # --- ENVIRONMENT SPECIFIC PARAMS ---
+      # [OFFICE] Use 0.20 for safe navigation
+      # desired_linear_vel: 0.20
+      
+      # [WAREHOUSE] Use 0.20 to avoid crashing/rolling
+      desired_linear_vel: 0.20
+      # -----------------------------------
+   ```
+
+7. Rebuild your workspace with `colcon build --packages-select autonomous_navigation` after making any changes.

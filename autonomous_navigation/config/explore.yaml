@@ -10,4 +10,11 @@ explore_node:
     orientation_scale: 0.0
     gain_scale: 0.1
     transform_tolerance: 0.3
-    min_frontier_size: 0.25
+    
+    # --- ENVIRONMENT SPECIFIC PARAMS ---
+    # [OFFICE] Use 0.25 for large open spaces
+    # min_frontier_size: 0.25
+    
+    # [WAREHOUSE] Use 0.10 for cluttered spaces with small gaps
+    min_frontier_size: 0.10
+    # -----------------------------------
