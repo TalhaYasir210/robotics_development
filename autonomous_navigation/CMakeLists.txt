@@ -33,6 +33,14 @@ ament_target_dependencies(nav2_manager_core
 )
 rosidl_target_interfaces(nav2_manager_core ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
+add_executable(simple_velocity_smoother src/simple_velocity_smoother.cpp)
+ament_target_dependencies(simple_velocity_smoother rclcpp geometry_msgs)
+
+install(TARGETS
+  simple_velocity_smoother
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
@@ -54,6 +62,10 @@ install(DIRECTORY
   launch
   worlds
   models
+  config
+  rviz
+  scripts
+  maps
   DESTINATION share/${PROJECT_NAME}
 )
 

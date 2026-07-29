@@ -1,0 +1,45 @@
+# CRITICAL CONSTRAINT: Environment Specific Parameter Management
+
+**WARNING TO AGENT:** DO NOT EVER change a configuration value (in `explore.yaml`, `nav2_params_slam.yaml`, or any other config) without preserving the previous environment's value! Failure to do so breaks the modularity of the project.
+
+When making parameter changes to fix issues for a specific map or environment:
+1. **Never overwrite or delete** previously working parameters for other environments.
+2. Instead, comment out the old parameters, add the new ones, and clearly label them with the target environment (e.g., `[OFFICE]` vs `[WAREHOUSE]`). 
+   *Example Format:*
+   ```yaml
+      # --- ENVIRONMENT SPECIFIC PARAMS ---
+      # [OFFICE] Use 0.25 for X
+      # param_name: 0.25
+      
+      # [WAREHOUSE] Use 0.10 for Y
+      param_name: 0.10
+      # -----------------------------------
+   ```
+3. **Always update the `README.md`** immediately in the same step to describe what these parameters do, why they were changed, and explicitly instruct the user on how to toggle them when switching between different maps.
+# Autonomous Navigation - Project Context & State
+
+**Note to Gemini Agent (or self):** If you are reading this in a new session, this file contains the architectural decisions and current progress for the `autonomous_navigation` project. 
+**Crucial Constraint:** The user is doing this for learning. ALWAYS explain the "why" before the "how". Proceed strictly step-by-step. NEVER skip writing detailed GTests for ANY `.cpp` file.
+
+## Architectural Decisions
+- **Robot:** Clearpath Jackal or TurtleBot3 (differential drive + 2D Lidar).
+- **GUI:** PyQt5 (modular node).
+- **Auto SLAM:** Frontier exploration integration.
+- **Pause/Resume:** Uses Nav2 cancel and replace trajectory mechanism.
+- **Logging:** All logs are output to a dedicated `logs/` directory in the workspace.
+- **Testing:** Comprehensive, highly granular GTest suites for all C++ logic.
+- **Workflow Automation:** The AI agent MUST automatically run `colcon build --packages-select <package>` and `colcon test --packages-select <package>` on its own. **NEVER** run a full `colcon build` without specifying packages. It should only ask the user to verify with `colcon test-result` before committing.
+- **Self-Contained Assets (No Hardcoded Paths):** All maps, worlds, and models must be placed directly inside the project (`autonomous_navigation/worlds`, `maps`, `models`, etc.). Paths in launch files or C++ code must NEVER be hardcoded (use `get_package_share_directory()` or similar) so the project works instantly out-of-the-box for anyone cloning the repo.
+  - *Note on Standalone:* "Standalone" does NOT mean copying standard external libraries or prerequisites (like default Nav2 yaml files, standard ROS packages, etc.) into the workspace. Rely on standard system-installed ROS 2 packages.
+  - *No External Modifications:* Do NOT change any external files outside the workspace just to make the project run. All necessary custom configurations, overrides, and launch files must be contained entirely within this workspace. This ensures the project runs smoothly on any user's PC without altering their core system setup.
+- **Version Control (Git):** Every completed feature (e.g., custom message, core logic, gtest) MUST be stored as an individual Git commit with a clear and descriptive message. The AI agent will explicitly instruct the user when it is time to commit at the end of a successful step.
+
+## Progress / Workflow Tracking
+- [x] Initial Requirements Gathering & Planning.
+- [x] **Step 1:** Define Custom ROS 2 Messages & Design Nav2 Core Logic.
+- [x] **Step 2:** Write GTests for Nav2 Core Logic.
+- [x] **Step 3:** Implement C++ Nav2 Action Client.
+- [x] **Step 4:** Gazebo Environments (Office & Warehouse).
+- [x] **Step 5:** Auto SLAM Mapping Setup.
+- [ ] **Step 6:** PyQt5 GUI Implementation.
+- [ ] **Step 7:** Master Launch & Polish.

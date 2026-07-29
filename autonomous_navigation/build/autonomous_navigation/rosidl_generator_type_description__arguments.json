@@ -1,0 +1,11 @@
+{
+  "package_name": "autonomous_navigation",
+  "output_dir": "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation/rosidl_generator_type_description/autonomous_navigation",
+  "idl_tuples": [
+    "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/build/autonomous_navigation/rosidl_adapter/autonomous_navigation:msg/NavigationCommand.idl"
+  ],
+  "include_paths": [
+    "geometry_msgs:/opt/ros/jazzy/share/geometry_msgs",
+    "std_msgs:/opt/ros/jazzy/share/std_msgs"
+  ]
+}

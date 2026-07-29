@@ -1,0 +1,12 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/autonomous_navigation__rosidl_typesupport_c.dir/rosidl_typesupport_c/autonomous_navigation/msg/navigation_command__type_support.cpp.o"
+  "CMakeFiles/autonomous_navigation__rosidl_typesupport_c.dir/rosidl_typesupport_c/autonomous_navigation/msg/navigation_command__type_support.cpp.o.d"
+  "libautonomous_navigation__rosidl_typesupport_c.pdb"
+  "libautonomous_navigation__rosidl_typesupport_c.so"
+  "rosidl_typesupport_c/autonomous_navigation/msg/navigation_command__type_support.cpp"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/autonomous_navigation__rosidl_typesupport_c.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
