@@ -37,8 +37,8 @@ private:
     auto now = this->get_clock()->now();
     double dt = 0.05; // 20 Hz
 
-    // Timeout if no message received for 0.5s
-    if (last_msg_time_.nanoseconds() > 0 && (now - last_msg_time_).seconds() > 0.5) {
+    // Timeout if no message received for 2.0s (allows keyboard to work without spamming)
+    if (last_msg_time_.nanoseconds() > 0 && (now - last_msg_time_).seconds() > 2.0) {
       target_vel_ = geometry_msgs::msg::Twist();
     }
 
@@ -75,11 +75,11 @@ private:
   rclcpp::Time last_msg_time_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
 
   // Safe limits for TurtleBot3
-  double max_accel_lin_ = 0.05; // m/s^2
-  double max_accel_ang_ = 0.20;  // rad/s^2
+  double max_accel_lin_ = 1.0; // m/s^2 (was extremely slow 0.05)
+  double max_accel_ang_ = 3.0; // rad/s^2
   
-  double max_vel_lin_ = 0.20;   // m/s
-  double max_vel_ang_ = 0.80;   // rad/s
+  double max_vel_lin_ = 1.0;   // m/s (increased for faster simulation teleop)
+  double max_vel_ang_ = 2.0;   // rad/s
 };
 
 int main(int argc, char * argv[])

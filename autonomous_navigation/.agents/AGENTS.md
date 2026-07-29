@@ -28,7 +28,7 @@ When making parameter changes to fix issues for a specific map or environment:
 - **Pause/Resume:** Uses Nav2 cancel and replace trajectory mechanism.
 - **Logging:** All logs are output to a dedicated `logs/` directory in the workspace.
 - **Testing:** Comprehensive, highly granular GTest suites for all C++ logic.
-- **Workflow Automation:** The AI agent MUST automatically run `colcon build` and `colcon test` on its own. It should only ask the user to verify with `colcon test-result` before committing.
+- **Workflow Automation:** The AI agent MUST automatically run `colcon build --packages-select <package>` and `colcon test --packages-select <package>` on its own. **NEVER** run a full `colcon build` without specifying packages. It should only ask the user to verify with `colcon test-result` before committing.
 - **Self-Contained Assets (No Hardcoded Paths):** All maps, worlds, and models must be placed directly inside the project (`autonomous_navigation/worlds`, `maps`, `models`, etc.). Paths in launch files or C++ code must NEVER be hardcoded (use `get_package_share_directory()` or similar) so the project works instantly out-of-the-box for anyone cloning the repo.
   - *Note on Standalone:* "Standalone" does NOT mean copying standard external libraries or prerequisites (like default Nav2 yaml files, standard ROS packages, etc.) into the workspace. Rely on standard system-installed ROS 2 packages.
   - *No External Modifications:* Do NOT change any external files outside the workspace just to make the project run. All necessary custom configurations, overrides, and launch files must be contained entirely within this workspace. This ensures the project runs smoothly on any user's PC without altering their core system setup.

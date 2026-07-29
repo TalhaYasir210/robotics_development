@@ -76,16 +76,17 @@ By default, the robot starts with a fresh map. To have the robot automatically l
 2. Scroll to the `ros__parameters` section (around line 23).
 3. Uncomment (remove the `#`) from the `map_file_name` and `map_start_pose` lines and set the path to your checkpoint.
 
-For example, to load the **office** checkpoint:
+For example, to load the checkpoints:
 ```yaml
-    map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/office_checkpoint_1"
-    map_start_pose: [0.0, 0.0, 0.0]
-```
-
-To load the **warehouse** checkpoint:
-```yaml
-    map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/warehouse_checkpoint_1"
-    map_start_pose: [0.0, 0.0, 0.0]
+    # --- ENVIRONMENT SPECIFIC PARAMS ---
+    # [OFFICE] Office SLAM Checkpoint
+    # map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/office_checkpoint_1"
+    # map_start_pose: [0.0, 0.0, 0.0]
+    
+    # [WAREHOUSE] Warehouse SLAM Checkpoint
+    # map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/warehouse_checkpoint_1"
+    # map_start_pose: [0.0, 1.5, 0.0]
+    # -----------------------------------
 ```
 
 *Note: Make sure to re-comment these lines (add a `#` back in front of them) when you want to start a brand new map!*
@@ -118,8 +119,14 @@ We have set up environment-specific toggles in our main configuration file:
       # [OFFICE] Use 0.35 for the open office
       # inflation_radius: 0.35
       
-      # [WAREHOUSE] Use 0.15 for the cluttered warehouse corridors
-      inflation_radius: 0.15
+      # [WAREHOUSE] Use 0.25 to allow passing through narrow aisles
+      inflation_radius: 0.25
+      
+      # [OFFICE] Default cost scaling factor
+      # cost_scaling_factor: 5.0
+      
+      # [WAREHOUSE] Lower factor to repel robot strongly from shelves
+      cost_scaling_factor: 1.0
       # -----------------------------------
    ```
    *And for the Laser Blind Spot in `nav2_params_slam.yaml` (search for `raytrace_min_range` in the costmaps):*
@@ -139,7 +146,10 @@ We have set up environment-specific toggles in our main configuration file:
    ```yaml
     # --- ENVIRONMENT SPECIFIC PARAMS ---
     # [OFFICE] Use 0.25 for large open spaces
-    min_frontier_size: 0.25
+    # min_frontier_size: 0.25
+    
+    # [WAREHOUSE] Use 0.35 to avoid exploring under slanted shelves and getting stuck
+    min_frontier_size: 0.35
     # -----------------------------------
    ```
 
@@ -147,15 +157,21 @@ We have set up environment-specific toggles in our main configuration file:
    ```yaml
           # --- ENVIRONMENT SPECIFIC PARAMS ---
           # [OFFICE] Use 0.10 as default for flat surfaces
-          min_obstacle_height: 0.10
+          # min_obstacle_height: 0.10
+          
+          # [WAREHOUSE] Use -2.0 to ignore floor bumps completely (if any)
+          min_obstacle_height: -2.0
           # -----------------------------------
    ```
 
-6. To prevent the robot from crashing or rolling over, ensure the `desired_linear_vel` and `regulated_linear_scaling_min_radius` in `FollowPath` are set to safe values:
+6. To prevent the robot from crashing or rolling over, ensure `use_collision_detection` is enabled and `desired_linear_vel` is set to safe values in `FollowPath`:
    ```yaml
       # --- ENVIRONMENT SPECIFIC PARAMS ---
       # [OFFICE] Use 0.20 for safe navigation
-      desired_linear_vel: 0.20
+      # desired_linear_vel: 0.20
+      
+      # [WAREHOUSE] Use 0.15 for tighter control
+      desired_linear_vel: 0.15
       # -----------------------------------
    ```
 

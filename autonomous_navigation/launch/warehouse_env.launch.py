@@ -22,7 +22,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     # Start the robot in the center of the new simple warehouse
     x_pose = LaunchConfiguration('x_pose', default='0.0')
-    y_pose = LaunchConfiguration('y_pose', default='0.0')
+    y_pose = LaunchConfiguration('y_pose', default='1.5')
 
     # Path to our self-contained world file
     world = os.path.join(

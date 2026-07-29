@@ -11,4 +11,10 @@ explore_node:
     gain_scale: 0.1
     transform_tolerance: 0.3
     
-    min_frontier_size: 0.25
+    # --- ENVIRONMENT SPECIFIC PARAMS ---
+    # [OFFICE] Use 0.25 to avoid micro-frontiers and stay efficient
+    # min_frontier_size: 0.25
+    
+    # [WAREHOUSE] Use 0.35 to avoid exploring under slanted shelves and getting stuck
+    min_frontier_size: 0.35
+    # -----------------------------------
