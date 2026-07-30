@@ -1,6 +1,0 @@
-{
-  "package_name": "autonomous_navigation",
-  "non_idl_tuples": [
-    "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation:msg/NavigationCommand.msg"
-  ]
-}
