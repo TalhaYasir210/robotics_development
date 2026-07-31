@@ -166,184 +166,45 @@ class ModeSelectionPage(BasePage):
             self.slam_menu.hide()
             self.btn_slam.setText("SLAM Mapping v")
 
-def create_feed_panel(header_text: str, overlays_left: list, overlays_right: list) -> QFrame:
-    card = QFrame()
-    card.setObjectName("feedPanelCard")
-    card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-    
-    layout = QVBoxLayout(card)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(0)
-    
-    header = QLabel(header_text)
-    header.setObjectName("feedPanelHeader")
-    layout.addWidget(header)
-    
-    feed_area = QFrame()
-    feed_area.setObjectName("feedArea")
-    layout.addWidget(feed_area, stretch=1)
-    
-    # Simple absolute positioning for tags
-    def apply_tags():
-        for tag_data in overlays_left:
-            lbl = QLabel(tag_data["text"], feed_area)
-            lbl.setProperty("class", tag_data.get("class", "overlayTag"))
-            lbl.move(12, feed_area.height() - 30 if tag_data.get("pos") == "bottom" else 12)
-            
-        for tag_data in overlays_right:
-            lbl = QLabel(tag_data["text"], feed_area)
-            lbl.setProperty("class", tag_data.get("class", "overlayTag"))
-            lbl.adjustSize()
-            lbl.move(feed_area.width() - lbl.width() - 12, 
-                     feed_area.height() - 30 if tag_data.get("pos") == "bottom" else 12)
-    
-    # Hack to reposition after layout
-    QTimer = __import__("PyQt5.QtCore", fromlist=["QTimer"]).QTimer
-    QTimer.singleShot(100, apply_tags)
-    
-    return card
-
-class NavigationActionPage(BasePage):
-    pause_clicked = pyqtSignal()
-    cancel_clicked = pyqtSignal()
+class ActiveProcessPage(BasePage):
+    stop_clicked = pyqtSignal()
 
     def __init__(self):
         super().__init__()
         
-        prompt = QLabel("Set the destination pose by clicking <b>2D Nav Goal</b> in the RViz2 panel")
-        prompt.setObjectName("subHeadingSmall")
-        prompt.setAlignment(Qt.AlignCenter)
-        self.main_layout.addWidget(prompt)
-        
-        feed_layout = QHBoxLayout()
-        feed_layout.setSpacing(20)
-        
-        p1 = create_feed_panel("MAP VIEW — RVIZ2", 
-                               [{"text": "RViz2 - /map", "pos": "bottom"}], [])
-        p2 = create_feed_panel("LIVE CAMERA — GAZEBO", 
-                               [{"text": "vel_x: 0.50 m/s", "pos": "top"}, {"text": "Gazebo - /camera/rgb", "pos": "bottom"}], 
-                               [{"text": "● LIVE - 30 HZ", "class": "overlayTagRed", "pos": "top"}])
-        feed_layout.addWidget(p1)
-        feed_layout.addWidget(p2)
-        
-        self.main_layout.addLayout(feed_layout, stretch=1)
+        self.lbl_instructions = QLabel("Process instructions will appear here.")
+        self.lbl_instructions.setObjectName("instructionText")
+        self.lbl_instructions.setAlignment(Qt.AlignCenter)
+        self.lbl_instructions.setWordWrap(True)
+        self.main_layout.addWidget(self.lbl_instructions, stretch=1)
         
         btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(16)
-        btn_layout.setContentsMargins(0, 24, 0, 0)
-        btn_layout.setAlignment(Qt.AlignHCenter)
+        btn_layout.setAlignment(Qt.AlignCenter)
         
-        self.btn_pause = QPushButton("Pause Navigation")
-        self.btn_pause.setObjectName("btnPause")
-        self.btn_pause.setCursor(QCursor(Qt.PointingHandCursor))
-        self.btn_pause.clicked.connect(self.pause_clicked.emit)
+        self.btn_stop = QPushButton("Stop Process")
+        self.btn_stop.setObjectName("btnStopProcess")
+        self.btn_stop.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_stop.clicked.connect(self.stop_clicked.emit)
         
-        self.btn_cancel = QPushButton("Cancel Navigation")
-        self.btn_cancel.setObjectName("btnCancel")
-        self.btn_cancel.setCursor(QCursor(Qt.PointingHandCursor))
-        self.btn_cancel.clicked.connect(self.cancel_clicked.emit)
-        
-        btn_layout.addWidget(self.btn_pause)
-        btn_layout.addWidget(self.btn_cancel)
+        btn_layout.addWidget(self.btn_stop)
         self.main_layout.addLayout(btn_layout)
+        
+    def set_state(self, mode: str):
+        if mode == "nav":
+            self.lbl_instructions.setText(
+                "Focus on the RViz window and click <b>2D Nav Goal</b> to set a destination pose for the robot.<br><br>"
+                "Close RViz or click Stop Process to cancel."
+            )
+        elif mode == "auto_map":
+            self.lbl_instructions.setText(
+                "Frontier Exploration is actively mapping the environment.<br><br>"
+                "Monitor the progress in RViz. Close RViz or click Stop Process to finish."
+            )
+        elif mode == "manual_map":
+            self.lbl_instructions.setText(
+                "Focus on the terminal where you launched this application and use the<br>"
+                "<b>I, J, K, L</b> keys to drive the robot.<br><br>"
+                "Close RViz or click Stop Process to finish."
+            )
 
-class AutoMappingPage(BasePage):
-    def __init__(self):
-        super().__init__()
-        
-        prompt = QLabel("Robot is autonomously exploring and building the map — no operator input required")
-        prompt.setObjectName("subHeadingSmall")
-        prompt.setAlignment(Qt.AlignCenter)
-        self.main_layout.addWidget(prompt)
-        
-        feed_layout = QHBoxLayout()
-        feed_layout.setSpacing(20)
-        
-        p1 = create_feed_panel("MAP VIEW — RVIZ2 / SLAM (BUILDING)", 
-                               [{"text": "RViz2 - /map", "pos": "bottom"}], 
-                               [{"text": "28x22 · 0.05m/px", "pos": "top"}])
-        p2 = create_feed_panel("LIVE CAMERA — GAZEBO", 
-                               [{"text": "vel_x: 0.50 m/s", "pos": "top"}, {"text": "Gazebo - /camera/rgb", "pos": "bottom"}], 
-                               [{"text": "● LIVE - 30 HZ", "class": "overlayTagRed", "pos": "top"}])
-        feed_layout.addWidget(p1)
-        feed_layout.addWidget(p2)
-        
-        self.main_layout.addLayout(feed_layout, stretch=1)
 
-class ManualMappingPage(BasePage):
-    def __init__(self):
-        super().__init__()
-        
-        prompt = QLabel("Drive the robot manually using keyboard controls to build the map")
-        prompt.setObjectName("subHeadingSmall")
-        prompt.setAlignment(Qt.AlignCenter)
-        self.main_layout.addWidget(prompt)
-        
-        feed_layout = QHBoxLayout()
-        feed_layout.setSpacing(20)
-        
-        p1 = create_feed_panel("MAP VIEW — RVIZ2 / SLAM (BUILDING)", 
-                               [{"text": "RViz2 - /map", "pos": "bottom"}], 
-                               [{"text": "28x22 · 0.05m/px", "pos": "top"}])
-        p2 = create_feed_panel("LIVE CAMERA — GAZEBO", 
-                               [{"text": "vel_x: 0.50 m/s", "pos": "top"}, {"text": "Gazebo - /camera/rgb", "pos": "bottom"}], 
-                               [{"text": "● LIVE - 30 HZ", "class": "overlayTagRed", "pos": "top"}])
-        feed_layout.addWidget(p1)
-        feed_layout.addWidget(p2)
-        
-        self.main_layout.addLayout(feed_layout, stretch=1)
-        
-        # Teleop Panel
-        kb_box = QFrame()
-        kb_box.setObjectName("teleopContainer")
-        kb_layout = QVBoxLayout(kb_box)
-        kb_layout.setContentsMargins(0,0,0,0)
-        kb_layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
-        
-        kb_title = QLabel("TELEOP KEYBOARD CONTROLS")
-        kb_title.setObjectName("teleopTitle")
-        kb_title.setAlignment(Qt.AlignCenter)
-        kb_layout.addWidget(kb_title)
-        kb_layout.addSpacing(16)
-        
-        grid = QGridLayout()
-        grid.setSpacing(8)
-        grid.setAlignment(Qt.AlignCenter)
-        
-        def make_key(letter, text):
-            v = QVBoxLayout()
-            v.setAlignment(Qt.AlignCenter)
-            v.setSpacing(6)
-            
-            btn = QLabel(letter)
-            btn.setObjectName("keyBtn")
-            btn.setAlignment(Qt.AlignCenter)
-            
-            # Drop shadow
-            shadow = QGraphicsDropShadowEffect()
-            shadow.setBlurRadius(4)
-            shadow.setXOffset(0)
-            shadow.setYOffset(2)
-            shadow.setColor(QColor(0, 0, 0, 40))
-            btn.setGraphicsEffect(shadow)
-            
-            lbl = QLabel(text)
-            lbl.setObjectName("keyLabel")
-            lbl.setAlignment(Qt.AlignCenter)
-            
-            v.addWidget(btn, alignment=Qt.AlignHCenter)
-            v.addWidget(lbl, alignment=Qt.AlignHCenter)
-            w = QWidget()
-            w.setLayout(v)
-            return w
-            
-        grid.addWidget(make_key("I", "Move Forward"), 0, 1)
-        grid.addWidget(make_key("J", "Rotate Left"), 1, 0)
-        grid.addWidget(make_key("K", "Stop"), 1, 1)
-        grid.addWidget(make_key("L", "Rotate Right"), 1, 2)
-        
-        kb_layout.addLayout(grid)
-        kb_layout.addSpacing(16)
-        
-        self.main_layout.addSpacing(24)
-        self.main_layout.addWidget(kb_box, alignment=Qt.AlignHCenter)

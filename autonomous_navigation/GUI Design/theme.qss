@@ -197,38 +197,6 @@ QPushButton#btnSlamMapping:hover {
     background-color: #557A5D;
 }
 
-QPushButton#btnPause {
-    background-color: #5A7BC4;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 8px;
-    font-size: 24px;
-    font-weight: bold;
-    min-width: 340px;
-    max-width: 340px;
-    min-height: 70px;
-    max-height: 70px;
-}
-QPushButton#btnPause:hover {
-    background-color: #4A6BB4;
-}
-
-QPushButton#btnCancel {
-    background-color: #CF6666;
-    color: #FFFFFF;
-    border: none;
-    border-radius: 8px;
-    font-size: 24px;
-    font-weight: bold;
-    min-width: 340px;
-    max-width: 340px;
-    min-height: 70px;
-    max-height: 70px;
-}
-QPushButton#btnCancel:hover {
-    background-color: #BF5656;
-}
-
 /* ================== Custom Dropdown Menu ================== */
 QWidget#slamMenuBox {
     background-color: #FFFFFF;
@@ -257,96 +225,26 @@ QFrame#slamMenuSeparator {
     max-height: 1px;
 }
 
-/* ================== Feed Panels ================== */
-QWidget#feedPanelCard {
-    background-color: #FFFFFF;
-    border: 1px solid #CED4DA;
-    border-radius: 8px;
-}
-QLabel#feedPanelHeader {
-    font-size: 18px;
-    font-weight: bold;
-    color: #6C757D;
-    letter-spacing: 1px;
-    padding: 16px;
-}
-QWidget#feedArea {
-    background-color: #343A40;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
 
-/* Overlays */
-QLabel.overlayTag {
-    background-color: rgba(33, 37, 41, 0.8);
-    color: #FFFFFF;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 16px;
-}
-QLabel.overlayTagRed {
-    background-color: #D9534F;
-    color: #FFFFFF;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-/* ================== D-Pad (Manual Mapping) ================== */
-QWidget#teleopContainer {
-    background-color: #F1F3F5;
-    border: 1px solid #CED4DA;
-    border-radius: 12px;
-    min-width: 450px;
-    max-width: 450px;
-    min-height: 320px;
-    max-height: 320px;
-}
-QLabel#teleopTitle {
-    font-size: 18px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    color: #6C757D;
-    margin-top: 16px;
-}
-QLabel#keyBtn {
-    background-color: #FFFFFF;
-    border: 1px solid #CED4DA;
-    border-radius: 8px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #212529;
-    min-width: 70px;
-    max-width: 70px;
-    min-height: 70px;
-    max-height: 70px;
-}
-QLabel#keyLabel {
-    font-size: 16px;
-    color: #6C757D;
-}
-
-/* ================== Logger (Footer) ================== */
-QWidget#loggerHeader {
-    background-color: #F4F5F7;
-    border-top: 1px solid #D3D3D3;
-    border-bottom: 1px solid #D3D3D3;
-    min-height: 64px;
-    max-height: 64px;
-}
-QLabel#loggerTitle {
-    font-size: 28px;
-    font-weight: bold;
-    letter-spacing: 1px;
+/* ================== Active Process Page ================== */
+QLabel#instructionText {
+    font-size: 32px;
     color: #495057;
-    margin-left: 24px;
+    margin: 40px;
 }
-QTextEdit#loggerConsole {
-    background-color: #F4F5F7;
+QPushButton#btnStopProcess {
+    background-color: #CF6666;
+    color: #FFFFFF;
     border: none;
-    padding: 16px;
-    font-family: "Courier New", Consolas, monospace;
+    border-radius: 12px;
     font-size: 28px;
-    color: #6C757D;
+    font-weight: bold;
+    min-width: 400px;
+    max-width: 400px;
+    min-height: 80px;
+    max-height: 80px;
+    margin-bottom: 60px;
+}
+QPushButton#btnStopProcess:hover {
+    background-color: #BF5656;
 }

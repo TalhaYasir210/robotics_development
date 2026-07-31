@@ -47,27 +47,18 @@ When making parameter changes to fix issues for a specific map or environment:
     - **Current Focus:** Focus entirely on front-end UI/UX design, layout creation, and progressive interface flow. (Do not write backend functionality yet).when layout is finalized then move to backend integration.
     - **Flexibility Note:** This front-end workflow and feature set are dynamic; the UI flow can be modified or expanded over time as new requirements arise.
   - **Global UI Requirements & Aesthetic ("Swiss" Design):**
-    - **Persistent Logging Screen:** A light gray (`#E4E7EA`) panel must be continuously visible and anchored at the bottom (20-25%) of the screen throughout every step of the flow. This acts as a terminal with dark monospace text.
     - **Strictly No Extraneous Icons:** The interface must remain entirely focused on the task. Do not include any OS-style status indicators or generic icons.
     - **Main Canvas:** Pure White (`#ffffff`) with a subtle drop shadow over an off-white/light-gray background (`#F0F2F4`). Dark Charcoal (`#1A1D21`) typography.
-    - **Universal Back Button:** A white button with a light gray border placed in the top left corner (on pages 2-5).
-  - **GUI Interaction Flow (5-Page Progressive Disclosure):**
-    - The GUI follows a strict 5-page transition flow using a QStackedWidget.
+    - **Universal Back Button:** A white button with a light gray border placed in the top left corner on the Mode Selection page.
+  - **GUI Interaction Flow (3-Page Flow):**
+    - The GUI follows a strict 3-page flow using a QStackedWidget (Logger and complex views have been removed).
     - **Page 1: Initialization State:** 
       - Heading: "Map Selection". Centered question: "On which map you want to navigate the Bot".
       - Component: Single dropdown menu "Select Map" (White bg, light border, Vibrant Teal chevron).
     - **Page 2: Mode Selection State:**
       - Heading: Dynamic Map Name (e.g. "Map: Factory_Floor_1"). Centered question: "Do you want to do navigation or Mapping".
       - Components: Two side-by-side buttons. Left: "Autonomous Navigation" (Vibrant Teal `#0D9488`), Right: "SLAM Mapping" (Muted Sage Green `#6B8F71`).
-    - **Page 3: Navigation Action State:**
-      - Heading: "Autonomous Navigation Mode". Prompt: "Give destination pose via RViz".
-      - Components: Split view (Left: RViz map, Right: Gazebo camera).
-      - Controls (below feeds): "Pause Navigation" (Cornflower Blue `#6B8FD4`) and "Cancel Navigation" (Coral/Red `#E57373`).
-    - **Page 4: Auto Mapping State:**
-      - Heading: "Auto SLAM Mapping".
-      - Components: Split view (Left: RViz map building, Right: Gazebo camera). No manual controls here.
-    - **Page 5: Manual Mapping State:**
-      - Heading: "Manual SLAM Mapping".
-      - Components: Split view (Left: RViz map, Right: Gazebo camera).
-      - Controls: Minimalist keyboard guide overlay formatted like a D-pad (I, J, K, L) placed below the feeds.
+    - **Page 3: Active Process State:**
+      - Heading: Dynamic Mode Name (e.g. "MANUAL SLAM MAPPING - MAP: FACTORY").
+      - Components: A minimalist screen displaying a large instructional text describing what the user must do (e.g. drive via terminal, click nav goal in RViz) and a large red "Stop Process" button to return to Page 2.
 - [ ] **Step 7:** Master Launch & Polish.
