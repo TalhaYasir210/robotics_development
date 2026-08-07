@@ -8,20 +8,26 @@
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <!-- 1. The build tool that generates the interfaces (pulls in empy) -->
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
   <depend>rclcpp</depend>
   <depend>rclcpp_action</depend>
+  <!-- 4. Dependencies for the specific message types you used -->
   <depend>geometry_msgs</depend>
   <depend>nav2_msgs</depend>
   <depend>action_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>qtbase5-dev</depend>
 
+  <!-- 2. The runtime dependencies for the generated messages -->
   <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>python3-pyqt5</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
+  <!-- 3. Declares this package as one that contains interfaces -->
   <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>
