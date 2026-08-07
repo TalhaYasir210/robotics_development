@@ -1,5 +1,10 @@
 import sys
 import os
+
+# Fix for FastRTPS service timeouts in ROS 2 Jazzy (causes instant failure for Nav2 lifecycle manager and action clients)
+# Using localhost only prevents UDP multicast discovery spam which overwhelms the default middleware buffers on a single PC.
+os.environ["ROS_LOCALHOST_ONLY"] = "1"
+
 import subprocess
 import signal
 from PyQt5.QtWidgets import (
@@ -267,6 +272,11 @@ class MainWindow(QMainWindow):
                 
                 subprocess.run(["pkill", "-9", "-f", "teleop_twist_keyboard"])
                 subprocess.run(["pkill", "-9", "-f", "rviz2"])
+                subprocess.run(["pkill", "-9", "-f", "slam_toolbox"])
+                subprocess.run(["pkill", "-9", "-f", "nav2"])
+                subprocess.run(["pkill", "-9", "-f", "explore"])
+                subprocess.run(["pkill", "-9", "-f", "amcl"])
+                subprocess.run(["pkill", "-9", "-f", "component_container"])
                     
                 self.current_process = None
                 self.teleop_process = None
@@ -306,6 +316,9 @@ class MainWindow(QMainWindow):
                 self.current_map = new_map
                 env_cmd = ["ros2", "launch", "autonomous_navigation", f"{self.current_map}_env.launch.py"]
                 self.env_process = subprocess.Popen(env_cmd)
+                # Give Gazebo time to start before launching Nav2 (avoid instant clock timeouts)
+                import time
+                time.sleep(12)
                 self.page_mode.set_map_name(map_name)
                 self.switch_page(1)
                 
