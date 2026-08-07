@@ -3,37 +3,87 @@
 This package provides a standalone and well-optimized setup for autonomous navigation and mapping in ROS 2. It utilizes custom Gazebo environments, SLAM Toolbox, Nav2, and frontier exploration.
 
 ## Project Setup & Build
+## 1. Clone the Repository
+First, set up your ROS 2 workspace and clone the repository directly into the `src` folder. Make sure to specify the branch you want to work on:
 
-This project is completely self-contained. The exploration package (`m-explore-ros2`) is included in the `robotics_development/extras` directory so it builds automatically alongside our custom package.
-
-To build the workspace:
 ```bash
-# Navigate to your workspace root
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
+git clone -b feature/gui --single-branch https://github.com/TalhaYasir210/robotics_development.git
+
+```
+
+## 2. To build the workspace:
+
+```bash
+
 cd ~/ros2_ws
 
-# Build the packages
-colcon build
+# Update rosdep and install all required system dependencies
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+
+# Build only the autonomous_navigation package
+colcon build --packages-select autonomous_navigation
 
 # Source the workspace setup
 source install/setup.bash
+
 ```
 
 ## How to run through GUI interface
 open terminal and run the follwing command
 ```bash
+
+pip install PyQt5
+
+```
+
+```bash
 cd ~/ros2_ws
-
-```
-```bash
 source install/setup.bash
-
-```
-
-```bash
 python3 "src/robotics_development/autonomous_navigation/GUI Design/main_window.py"
 
 ```
 
+## Troubleshooting: Virtual Environment Build Errors
+
+### Issue 1: The 'em' Module Error
+
+```bash
+
+pip install empy==3.3.4
+
+```
+### Issue 2: The 'catkin_pkg' Error
+
+```bash
+pip install catkin_pkg
+
+```
+
+## The Ultimate Fix (The "Glass Wall" Environment)
+
+```bash
+
+
+#1. Deactivate your current environment
+deactivate
+
+# 2. Delete the old environment folder
+rm -rf /path/to/your/venv
+
+# 3. Create a new environment using the system packages flag
+python3 -m venv --system-site-packages /path/to/your/venv
+
+# 4. Activate the new environment
+source /path/to/your/venv/bin/activate
+
+# 5. Run the build again
+cd ~/ros2_ws
+colcon build --packages-select autonomous_navigation
+
+```
 
 ### Saving and Loading SLAM Checkpoints (Resume Mapping)
 
