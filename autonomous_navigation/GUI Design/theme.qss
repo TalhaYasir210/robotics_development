@@ -13,13 +13,13 @@ QLabel {
 QWidget#headerBar {
     background-color: #FFFFFF;
     border-bottom: 1px solid #D3D3D3;
-    min-height: 120px;
-    max-height: 120px;
+    min-height: 80px;
+    max-height: 80px;
 }
 
 QLabel#headerTitle {
     color: #6C757D;
-    font-size: 28px;
+    font-size: 20px;
     font-weight: bold;
     letter-spacing: 2px;
 }
@@ -29,38 +29,38 @@ QLabel.statusBadge {
     background-color: #EAF8F5;
     border: 1px solid #57C1A3;
     color: #2A9D8F;
-    border-radius: 5px;
-    font-size: 20px;
+    border-radius: 4px;
+    font-size: 14px;
     font-weight: bold;
-    padding: 0px 24px;
-    min-height: 54px;
-    max-height: 54px;
+    padding: 0px 16px;
+    min-height: 36px;
+    max-height: 36px;
 }
 
 QLabel.statusBadgeTeleop {
     background-color: #E9F2FE;
     border: 1px solid #A3C5F5;
     color: #4B73D0;
-    border-radius: 5px;
-    font-size: 20px;
+    border-radius: 4px;
+    font-size: 14px;
     font-weight: bold;
-    padding: 0px 24px;
-    min-height: 54px;
-    max-height: 54px;
+    padding: 0px 16px;
+    min-height: 36px;
+    max-height: 36px;
 }
 
 /* Back Button */
 QPushButton#btnBack {
     background-color: #FFFFFF;
     border: 1px solid #CED4DA;
-    border-radius: 6px;
-    font-size: 20px;
+    border-radius: 4px;
+    font-size: 14px;
     color: #212529;
     font-weight: 500;
-    min-width: 140px;
-    max-width: 140px;
-    min-height: 54px;
-    max-height: 54px;
+    min-width: 100px;
+    max-width: 100px;
+    min-height: 36px;
+    max-height: 36px;
 }
 QPushButton#btnBack:hover {
     background-color: #F8F9FA;
@@ -68,49 +68,49 @@ QPushButton#btnBack:hover {
 
 /* ================== Main Content Typology ================== */
 QLabel#mainHeading {
-    font-size: 56px;
+    font-size: 36px;
     font-weight: 700;
     color: #212529;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 QLabel#subHeading {
-    font-size: 32px;
+    font-size: 24px;
     color: #6C757D;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
 }
 
 QLabel#subHeadingSmall {
-    font-size: 28px;
+    font-size: 20px;
     color: #495057;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 QLabel#activeMapPrefix {
-    font-size: 32px;
+    font-size: 24px;
     color: #6C757D;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
 }
 QLabel#activeMapValue {
-    font-size: 32px;
+    font-size: 24px;
     color: #1D9A85;
     font-weight: bold;
     font-family: "Courier New", Consolas, monospace;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
 }
 
 /* ================== Controls ================== */
 QComboBox {
     background-color: #FFFFFF;
     border: 1px solid #CED4DA;
-    border-radius: 8px;
-    padding-left: 24px;
-    font-size: 28px;
+    border-radius: 6px;
+    padding-left: 16px;
+    font-size: 20px;
     color: #495057;
-    min-width: 800px;
-    max-width: 800px;
-    min-height: 90px;
-    max-height: 90px;
+    min-width: 500px;
+    max-width: 500px;
+    min-height: 54px;
+    max-height: 54px;
 }
 QComboBox:on, QComboBox:focus {
     border: 2px solid #2A9D8F;
@@ -130,9 +130,9 @@ QComboBox QAbstractItemView {
     outline: none;
 }
 QComboBox QAbstractItemView::item {
-    min-height: 90px;
-    padding-left: 24px;
-    font-size: 28px;
+    min-height: 54px;
+    padding-left: 16px;
+    font-size: 20px;
     color: #212529;
     border-bottom: 1px solid #E9ECEF;
 }
@@ -147,15 +147,15 @@ QComboBox QAbstractItemView::item:last {
 QPushButton#confirmMapBtn {
     background-color: #1D9A85;
     color: #FFFFFF;
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 600;
-    border-radius: 8px;
+    border-radius: 6px;
     border: none;
-    min-width: 350px;
-    max-width: 350px;
-    min-height: 80px;
-    max-height: 80px;
-    margin-top: 24px;
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 54px;
+    max-height: 54px;
+    margin-top: 16px;
 }
 QPushButton#confirmMapBtn:hover {
     background-color: #168A79;
@@ -168,13 +168,13 @@ QPushButton#btnNavigation {
     background-color: #1D9A85;
     color: #FFFFFF;
     border: none;
-    border-radius: 8px;
-    font-size: 24px;
+    border-radius: 6px;
+    font-size: 18px;
     font-weight: 600;
-    min-width: 400px;
-    max-width: 400px;
-    min-height: 80px;
-    max-height: 80px;
+    min-width: 260px;
+    max-width: 260px;
+    min-height: 54px;
+    max-height: 54px;
 }
 QPushButton#btnNavigation:hover {
     background-color: #168A79;
@@ -184,13 +184,13 @@ QPushButton#btnSlamMapping {
     background-color: #648D6C;
     color: #FFFFFF;
     border: none;
-    border-radius: 8px;
-    font-size: 24px;
+    border-radius: 6px;
+    font-size: 18px;
     font-weight: 600;
-    min-width: 380px;
-    max-width: 380px;
-    min-height: 80px;
-    max-height: 80px;
+    min-width: 260px;
+    max-width: 260px;
+    min-height: 54px;
+    max-height: 54px;
     text-align: center;
 }
 QPushButton#btnSlamMapping:hover {
@@ -211,12 +211,12 @@ QWidget#slamMenuItem:hover {
     background-color: #F8F9FA;
 }
 QLabel#slamMenuTitle {
-    font-size: 28px;
+    font-size: 20px;
     font-weight: bold;
     color: #212529;
 }
 QLabel#slamMenuDesc {
-    font-size: 20px;
+    font-size: 14px;
     color: #6C757D;
     margin-top: 4px;
 }
@@ -228,22 +228,22 @@ QFrame#slamMenuSeparator {
 
 /* ================== Active Process Page ================== */
 QLabel#instructionText {
-    font-size: 32px;
+    font-size: 24px;
     color: #495057;
-    margin: 40px;
+    margin: 24px;
 }
 QPushButton#btnStopProcess {
     background-color: #CF6666;
     color: #FFFFFF;
     border: none;
-    border-radius: 12px;
-    font-size: 28px;
+    border-radius: 8px;
+    font-size: 20px;
     font-weight: bold;
-    min-width: 400px;
-    max-width: 400px;
-    min-height: 80px;
-    max-height: 80px;
-    margin-bottom: 60px;
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 54px;
+    max-height: 54px;
+    margin-bottom: 40px;
 }
 QPushButton#btnStopProcess:hover {
     background-color: #BF5656;

@@ -175,4 +175,23 @@ We have set up environment-specific toggles in our main configuration file:
       # -----------------------------------
    ```
 
-7. Rebuild your workspace with `colcon build --packages-select autonomous_navigation` after making any changes.
+7. **Initial Pose Alignment:** When running navigation, Nav2 (AMCL) needs to know where the robot spawned in Gazebo so it can localize correctly. Otherwise, the robot will appear "outside the map" in RViz. In `config/nav2_params_slam.yaml` (search for `initial_pose` under `amcl`):
+   ```yaml
+    # --- ENVIRONMENT SPECIFIC PARAMS ---
+    # [OFFICE] Initial pose
+    # initial_pose:
+    #   x: -3.0
+    #   y: 1.0
+    #   z: 0.0
+    #   yaw: 0.0
+    
+    # [WAREHOUSE] Initial pose
+    initial_pose:
+      x: 0.0
+      y: 1.5
+      z: 0.0
+      yaw: 0.0
+    # -----------------------------------
+   ```
+
+8. Rebuild your workspace with `colcon build --packages-select autonomous_navigation` after making any changes.

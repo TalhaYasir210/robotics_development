@@ -20,20 +20,20 @@ class InitializationPage(BasePage):
         super().__init__()
         self.main_layout.setAlignment(Qt.AlignCenter)
         
-        lbl_head = QLabel("On which map do you want to navigate the Bot?")
+        lbl_head = QLabel("Which simulation environment do you want to launch?")
         lbl_head.setObjectName("mainHeading")
         lbl_head.setAlignment(Qt.AlignCenter)
         
-        lbl_sub = QLabel("Choose from the pre-loaded maps available on this robot")
+        lbl_sub = QLabel("Choose from the pre-loaded simulation environments available on this robot")
         lbl_sub.setObjectName("subHeading")
         lbl_sub.setAlignment(Qt.AlignCenter)
         
         self.combo = QComboBox()
         self.combo.setView(QListView()) # For proper QSS styling of dropdown list
-        self.combo.addItems(["Select Map", "Office", "Warehouse"])
+        self.combo.addItems(["Select Environment", "Office", "Warehouse"])
         self.combo.setCursor(QCursor(Qt.PointingHandCursor))
         
-        self.btn_confirm = QPushButton("Confirm Map →")
+        self.btn_confirm = QPushButton("Confirm Environment →")
         self.btn_confirm.setObjectName("confirmMapBtn")
         self.btn_confirm.setCursor(QCursor(Qt.PointingHandCursor))
         sp = self.btn_confirm.sizePolicy()
@@ -50,7 +50,7 @@ class InitializationPage(BasePage):
         self.main_layout.addWidget(self.btn_confirm, alignment=Qt.AlignHCenter)
         
     def on_map_changed(self, text):
-        if text != "Select Map":
+        if text != "Select Environment":
             self.btn_confirm.show()
         else:
             self.btn_confirm.hide()
@@ -75,7 +75,7 @@ class ModeSelectionPage(BasePage):
         map_info_layout.setAlignment(Qt.AlignCenter)
         map_info_layout.setSpacing(8)
         
-        lbl1 = QLabel("Active map:")
+        lbl1 = QLabel("Active world:")
         lbl1.setObjectName("activeMapPrefix")
         self.lbl_map_name = QLabel("Unknown")
         self.lbl_map_name.setObjectName("activeMapValue")
@@ -88,7 +88,7 @@ class ModeSelectionPage(BasePage):
         
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(20)
-        btn_layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
+        btn_layout.setAlignment(Qt.AlignCenter)
         
         self.btn_nav = QPushButton("Autonomous Navigation")
         self.btn_nav.setObjectName("btnNavigation")
@@ -112,7 +112,7 @@ class ModeSelectionPage(BasePage):
         
         self.slam_menu = QFrame()
         self.slam_menu.setObjectName("slamMenuBox")
-        self.slam_menu.setFixedWidth(380)
+        self.slam_menu.setFixedWidth(260)
         sp2 = self.slam_menu.sizePolicy()
         sp2.setRetainSizeWhenHidden(True)
         self.slam_menu.setSizePolicy(sp2)
@@ -178,33 +178,22 @@ class ActiveProcessPage(BasePage):
         self.lbl_instructions.setWordWrap(True)
         self.main_layout.addWidget(self.lbl_instructions, stretch=1)
         
-        btn_layout = QHBoxLayout()
-        btn_layout.setAlignment(Qt.AlignCenter)
-        
-        self.btn_stop = QPushButton("Stop Process")
-        self.btn_stop.setObjectName("btnStopProcess")
-        self.btn_stop.setCursor(QCursor(Qt.PointingHandCursor))
-        self.btn_stop.clicked.connect(self.stop_clicked.emit)
-        
-        btn_layout.addWidget(self.btn_stop)
-        self.main_layout.addLayout(btn_layout)
-        
     def set_state(self, mode: str):
         if mode == "nav":
             self.lbl_instructions.setText(
                 "Focus on the RViz window and click <b>2D Nav Goal</b> to set a destination pose for the robot.<br><br>"
-                "Close RViz or click Stop Process to cancel."
+                "Close RViz to finish and return to the menu."
             )
         elif mode == "auto_map":
             self.lbl_instructions.setText(
                 "Frontier Exploration is actively mapping the environment.<br><br>"
-                "Monitor the progress in RViz. Close RViz or click Stop Process to finish."
+                "Monitor the progress in RViz. Close RViz to finish."
             )
         elif mode == "manual_map":
             self.lbl_instructions.setText(
                 "Focus on the terminal where you launched this application and use the<br>"
                 "<b>I, J, K, L</b> keys to drive the robot.<br><br>"
-                "Close RViz or click Stop Process to finish."
+                "Close RViz to finish."
             )
 
 
