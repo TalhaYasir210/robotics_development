@@ -60,6 +60,8 @@ class LoadingOverlay(QWidget):
         self.dots = (self.dots + 1) % 4
         self.lbl_text.setText("Wait, processes are being closed" + "." * self.dots)
 
+from ament_index_python.packages import get_package_share_directory
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -182,7 +184,9 @@ class MainWindow(QMainWindow):
                 self.lbl_title.setText(f"AUTONOMOUS NAVIGATION - ENVIRONMENT: {self.current_map.upper()}")
                 self.pill_status.setText("NAV ACTIVE")
                 self.pill_status.setProperty("class", "statusBadge")
-                map_path = f"/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/my_{self.current_map}_map.yaml"
+                # Dynamic path calculation (Works anywhere: Docker, your host, senior's PC)
+                pkg_share = get_package_share_directory('autonomous_navigation')
+                map_path = os.path.join(pkg_share, 'maps', f'my_{self.current_map}_map.yaml')
                 cmd = ["ros2", "launch", "autonomous_navigation", "navigation.launch.py", f"env:={self.current_map}", f"map:={map_path}"]
                 terminal_cmd = ["gnome-terminal", "--wait", "--"] + cmd
                 self.current_process = subprocess.Popen(terminal_cmd)
