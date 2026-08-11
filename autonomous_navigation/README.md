@@ -17,30 +17,19 @@ git clone -b feature/gui --single-branch https://github.com/TalhaYasir210/roboti
 
 ```bash
 
-cd ~/ros2_ws
+apt-get update
+apt-get install python3-venv ros-jazzy-turtlebot3 ros-jazzy-turtlebot3-gazebo -y
 
-# Update rosdep and install all required system dependencies
+python3 -m venv /opt/ros_venv
+source /opt/ros_venv/bin/activate
+
+pip install -r /ros2_ws/src/robotics_development/requirements.txt
+
+cd /ws
 rosdep update
 rosdep install --from-paths src --ignore-src -r -y
-
-# Build only the autonomous_navigation package
 colcon build --packages-select autonomous_navigation
 
-# Source the workspace setup
-source install/setup.bash
-
-```
-
-## How to run through GUI interface
-open terminal and run the follwing command
-```bash
-
-pip install PyQt5
-
-```
-
-```bash
-cd ~/ros2_ws
 source install/setup.bash
 python3 "src/robotics_development/autonomous_navigation/GUI Design/main_window.py"
 
