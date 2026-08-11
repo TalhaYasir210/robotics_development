@@ -13,6 +13,11 @@ git clone -b feature/gui --single-branch https://github.com/TalhaYasir210/roboti
 
 ```
 
+```bash
+git pull
+git submodule update --init --recursive
+```
+
 ## 2. To build the workspace:
 
 ```bash
@@ -20,7 +25,7 @@ git clone -b feature/gui --single-branch https://github.com/TalhaYasir210/roboti
 apt-get update
 apt-get install python3-venv ros-jazzy-turtlebot3 ros-jazzy-turtlebot3-gazebo -y
 
-python3 -m venv /opt/ros_venv
+python3 -m venv ros_venv
 source /opt/ros_venv/bin/activate
 
 pip install -r /ros2_ws/src/robotics_development/requirements.txt
@@ -35,44 +40,6 @@ python3 "src/robotics_development/autonomous_navigation/GUI Design/main_window.p
 
 ```
 
-## Troubleshooting: Virtual Environment Build Errors
-
-### Issue 1: The 'em' Module Error
-
-```bash
-
-pip install empy==3.3.4
-
-```
-### Issue 2: The 'catkin_pkg' Error
-
-```bash
-pip install catkin_pkg
-
-```
-
-## The Ultimate Fix (The "Glass Wall" Environment)
-
-```bash
-
-
-#1. Deactivate your current environment
-deactivate
-
-# 2. Delete the old environment folder
-rm -rf /path/to/your/venv
-
-# 3. Create a new environment using the system packages flag
-python3 -m venv --system-site-packages /path/to/your/venv
-
-# 4. Activate the new environment
-source /path/to/your/venv/bin/activate
-
-# 5. Run the build again
-cd ~/ros2_ws
-colcon build --packages-select autonomous_navigation
-
-```
 
 ### Saving and Loading SLAM Checkpoints (Resume Mapping)
 
