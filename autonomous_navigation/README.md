@@ -35,7 +35,8 @@ pip install -r /ros2_ws/src/robotics_development/requirements.txt
 cd /ros2_ws
 rosdep update
 rosdep install --from-paths src --ignore-src -r -y
-colcon build --packages-select autonomous_navigation
+colcon build --packages-up-to autonomous_navigation explore_lite explore_lite_msgs multirobot_map_merge
+
 
 source install/setup.bash
 python3 "src/robotics_development/autonomous_navigation/GUI Design/main_window.py"
