@@ -14,6 +14,8 @@ git clone -b feature/gui --single-branch https://github.com/TalhaYasir210/roboti
 ```
 
 ```bash
+#after cloning 
+cd /robotics_development
 git pull
 git submodule update --init --recursive
 ```
@@ -30,7 +32,7 @@ source /opt/ros_venv/bin/activate
 
 pip install -r /ros2_ws/src/robotics_development/requirements.txt
 
-cd /ws
+cd /ros2_ws
 rosdep update
 rosdep install --from-paths src --ignore-src -r -y
 colcon build --packages-select autonomous_navigation
