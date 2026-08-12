@@ -2,6 +2,14 @@
 
 This package provides a standalone and well-optimized setup for autonomous navigation and mapping in ROS 2. It utilizes custom Gazebo environments, SLAM Toolbox, Nav2, and frontier exploration.
 
+## Prerequisites
+
+    ROS 2 (Jazzy)
+    Gazebo Simulator & TurtleBot3 Packages
+    Navigation2 (Nav2) Stack
+    colcon build tools
+
+
 ## Project Setup & Build
 ## 1. Clone the Repository
 First, set up your ROS 2 workspace and clone the repository directly into the `src` folder. Make sure to specify the branch you want to work on:
@@ -20,7 +28,7 @@ git pull
 git submodule update --init --recursive
 ```
 
-## 2. To build the workspace:
+## 2. To build and run the workspace:
 
 ```bash
 
@@ -43,8 +51,17 @@ python3 "src/robotics_development/autonomous_navigation/GUI Design/main_window.p
 
 ```
 
+## 3. Project Preview:
+<img width="1080" height="1080" alt="Screenshot from 2026-08-12 10-50-57" src="https://github.com/user-attachments/assets/135e770f-1b32-47c0-9212-fde86a3c26d3" />
+<img width="1080" height="1080" alt="Screenshot from 2026-08-12 10-51-28" src="https://github.com/user-attachments/assets/c21deab2-b111-44bc-99fa-4ecdb136e69c" />
+<img width="2126" height="1164" alt="Screenshot from 2026-08-12 10-52-08" src="https://github.com/user-attachments/assets/509657f8-d076-4e93-9dd8-de2c508f90e5" />
+<img width="2126" height="1164" alt="Screenshot from 2026-08-12 10-53-38" src="https://github.com/user-attachments/assets/f1d65ea5-2aa9-4afc-ba91-21be5151db73" />
 
-### Saving and Loading SLAM Checkpoints (Resume Mapping)
+
+
+
+
+### 4. Saving and Loading SLAM Checkpoints (Resume Mapping)
 
 There is a major difference between saving a **Static Map** (for pure navigation later) and saving a **SLAM Checkpoint** (to resume exploring the same house tomorrow). The `map_saver_cli` command shown above saves a *Static Map*.
 
