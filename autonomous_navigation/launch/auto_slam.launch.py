@@ -8,6 +8,8 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Time
 from launch.conditions import LaunchConfigurationEquals
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch.actions import EmitEvent
+from launch.events import Shutdown
 from launch_ros.actions import Node
 
 
@@ -43,18 +45,10 @@ def generate_launch_description():
         pkg_autonomous_nav, 'config', 'mapper_params_online_async.yaml')
     nav2_params_file = os.path.join(pkg_autonomous_nav, 'config', 'nav2_params_slam.yaml')
     explore_params_file = os.path.join(pkg_autonomous_nav, 'config', 'explore.yaml')
-    rviz_config_file = os.path.join(pkg_autonomous_nav, 'rviz', 'auto_slam.rviz')
+    rviz_auto_config = os.path.join(pkg_autonomous_nav, 'rviz', 'auto_slam.rviz')
+    rviz_manual_config = os.path.join(pkg_autonomous_nav, 'rviz', 'manual_slam.rviz')
 
-    # Environment Launch
-    # We dynamically select office_env.launch.py or warehouse_env.launch.py
-    env_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            os.path.join(pkg_autonomous_nav, 'launch', ''),
-            env_config,
-            '_env.launch.py'
-        ])
-    )
-
+    # Environment Launch removed (Gazebo is launched separately)
     # SLAM Toolbox Launch
     slam_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -116,14 +110,28 @@ def generate_launch_description():
         ]
     )
 
-    # RViz Node
-    rviz_node = Node(
+    # RViz Node (Auto)
+    rviz_node_auto = Node(
+        condition=LaunchConfigurationEquals('mode', 'auto'),
         package='rviz2',
         executable='rviz2',
         name='rviz2',
-        arguments=['-d', rviz_config_file],
+        arguments=['-d', rviz_auto_config],
         parameters=[{'use_sim_time': use_sim_time}],
-        output='screen'
+        output='screen',
+        on_exit=EmitEvent(event=Shutdown())
+    )
+    
+    # RViz Node (Manual)
+    rviz_node_manual = Node(
+        condition=LaunchConfigurationEquals('mode', 'manual'),
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_manual_config],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen',
+        on_exit=EmitEvent(event=Shutdown())
     )
 
     # Simple Velocity Smoother (only for manual mode)
@@ -141,12 +149,12 @@ def generate_launch_description():
     ld.add_action(env_arg)
     ld.add_action(mode_arg)
     ld.add_action(use_sim_time_arg)
-    ld.add_action(env_launch)
     ld.add_action(slam_launch)
     ld.add_action(nav2_launch)
     ld.add_action(velocity_smoother_node)
     ld.add_action(explore_node)
-    ld.add_action(rviz_node)
+    ld.add_action(rviz_node_auto)
+    ld.add_action(rviz_node_manual)
     ld.add_action(simple_velocity_smoother_node)
 
     return ld

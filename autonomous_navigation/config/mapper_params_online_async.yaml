@@ -10,6 +10,7 @@ slam_toolbox:
     ceres_loss_function: None
 
     # ROS Parameters
+    use_sim_time: True
     odom_frame: odom
     map_frame: map
     base_frame: base_footprint
@@ -26,8 +27,8 @@ slam_toolbox:
     #map_start_pose: [0.0, 0.0, 0.0]
     
     # [WAREHOUSE] Warehouse SLAM Checkpoint
-    map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/warehouse_checkpoint_1"
-    map_start_pose: [0.0, 0.0, 0.0]
+    # map_file_name: "/home/deadsec/ros2_ws/src/robotics_development/autonomous_navigation/maps/warehouse_checkpoint_1"
+    # map_start_pose: [0.0, 0.0, 0.0]
     # -----------------------------------
 
     debug_logging: false

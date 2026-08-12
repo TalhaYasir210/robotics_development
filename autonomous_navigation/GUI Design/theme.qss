@@ -1,0 +1,250 @@
+/* theme.qss - Exact Figma Specifications */
+
+QMainWindow, QWidget#mainCanvas {
+    background-color: #FFFFFF;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+QLabel {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ================== Top Navigation Bar ================== */
+QWidget#headerBar {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #D3D3D3;
+    min-height: 80px;
+    max-height: 80px;
+}
+
+QLabel#headerTitle {
+    color: #6C757D;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* Badges */
+QLabel.statusBadge {
+    background-color: #EAF8F5;
+    border: 1px solid #57C1A3;
+    color: #2A9D8F;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0px 16px;
+    min-height: 36px;
+    max-height: 36px;
+}
+
+QLabel.statusBadgeTeleop {
+    background-color: #E9F2FE;
+    border: 1px solid #A3C5F5;
+    color: #4B73D0;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 0px 16px;
+    min-height: 36px;
+    max-height: 36px;
+}
+
+/* Back Button */
+QPushButton#btnBack {
+    background-color: #FFFFFF;
+    border: 1px solid #CED4DA;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #212529;
+    font-weight: 500;
+    min-width: 100px;
+    max-width: 100px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton#btnBack:hover {
+    background-color: #F8F9FA;
+}
+
+/* ================== Main Content Typology ================== */
+QLabel#mainHeading {
+    font-size: 36px;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 12px;
+}
+
+QLabel#subHeading {
+    font-size: 24px;
+    color: #6C757D;
+    margin-bottom: 40px;
+}
+
+QLabel#subHeadingSmall {
+    font-size: 20px;
+    color: #495057;
+    margin-bottom: 16px;
+}
+
+QLabel#activeMapPrefix {
+    font-size: 24px;
+    color: #6C757D;
+    margin-bottom: 32px;
+}
+QLabel#activeMapValue {
+    font-size: 24px;
+    color: #1D9A85;
+    font-weight: bold;
+    font-family: "Courier New", Consolas, monospace;
+    margin-bottom: 32px;
+}
+
+/* ================== Controls ================== */
+QComboBox {
+    background-color: #FFFFFF;
+    border: 1px solid #CED4DA;
+    border-radius: 6px;
+    padding-left: 16px;
+    font-size: 20px;
+    color: #495057;
+    min-width: 500px;
+    max-width: 500px;
+    min-height: 54px;
+    max-height: 54px;
+}
+QComboBox:on, QComboBox:focus {
+    border: 2px solid #2A9D8F;
+}
+QComboBox::drop-down {
+    border: none;
+    width: 30px;
+}
+QComboBox::down-arrow {
+    image: none; /* Can be handled via code or specific SVG */
+}
+
+QComboBox QAbstractItemView {
+    background-color: #FFFFFF;
+    border: 1px solid #CED4DA;
+    border-radius: 8px;
+    outline: none;
+}
+QComboBox QAbstractItemView::item {
+    min-height: 54px;
+    padding-left: 16px;
+    font-size: 20px;
+    color: #212529;
+    border-bottom: 1px solid #E9ECEF;
+}
+QComboBox QAbstractItemView::item:hover {
+    background-color: #F8F9FA;
+}
+QComboBox QAbstractItemView::item:last {
+    border-bottom: none;
+}
+
+/* Buttons */
+QPushButton#confirmMapBtn {
+    background-color: #1D9A85;
+    color: #FFFFFF;
+    font-size: 20px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 54px;
+    max-height: 54px;
+    margin-top: 16px;
+}
+QPushButton#confirmMapBtn:hover {
+    background-color: #168A79;
+}
+QPushButton#confirmMapBtn:pressed {
+    background-color: #127365;
+}
+
+QPushButton#btnNavigation {
+    background-color: #1D9A85;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 600;
+    min-width: 260px;
+    max-width: 260px;
+    min-height: 54px;
+    max-height: 54px;
+}
+QPushButton#btnNavigation:hover {
+    background-color: #168A79;
+}
+
+QPushButton#btnSlamMapping {
+    background-color: #648D6C;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 600;
+    min-width: 260px;
+    max-width: 260px;
+    min-height: 54px;
+    max-height: 54px;
+    text-align: center;
+}
+QPushButton#btnSlamMapping:hover {
+    background-color: #557A5D;
+}
+
+/* ================== Custom Dropdown Menu ================== */
+QWidget#slamMenuBox {
+    background-color: #FFFFFF;
+    border: 1px solid #CED4DA;
+    border-radius: 8px;
+}
+QWidget#slamMenuItem {
+    background-color: transparent;
+    border-radius: 0px;
+}
+QWidget#slamMenuItem:hover {
+    background-color: #F8F9FA;
+}
+QLabel#slamMenuTitle {
+    font-size: 20px;
+    font-weight: bold;
+    color: #212529;
+}
+QLabel#slamMenuDesc {
+    font-size: 14px;
+    color: #6C757D;
+    margin-top: 4px;
+}
+QFrame#slamMenuSeparator {
+    background-color: #E9ECEF;
+    max-height: 1px;
+}
+
+
+/* ================== Active Process Page ================== */
+QLabel#instructionText {
+    font-size: 24px;
+    color: #495057;
+    margin: 24px;
+}
+QPushButton#btnStopProcess {
+    background-color: #CF6666;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: bold;
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 54px;
+    max-height: 54px;
+    margin-bottom: 40px;
+}
+QPushButton#btnStopProcess:hover {
+    background-color: #BF5656;
+}

@@ -32,6 +32,7 @@ When making parameter changes to fix issues for a specific map or environment:
 - **Self-Contained Assets (No Hardcoded Paths):** All maps, worlds, and models must be placed directly inside the project (`autonomous_navigation/worlds`, `maps`, `models`, etc.). Paths in launch files or C++ code must NEVER be hardcoded (use `get_package_share_directory()` or similar) so the project works instantly out-of-the-box for anyone cloning the repo.
   - *Note on Standalone:* "Standalone" does NOT mean copying standard external libraries or prerequisites (like default Nav2 yaml files, standard ROS packages, etc.) into the workspace. Rely on standard system-installed ROS 2 packages.
   - *No External Modifications:* Do NOT change any external files outside the workspace just to make the project run. All necessary custom configurations, overrides, and launch files must be contained entirely within this workspace. This ensures the project runs smoothly on any user's PC without altering their core system setup.
+- **Project Structure & Organization:** The project strictly maintains file organization by purpose. All future GUI and frontend code MUST be placed inside the dedicated `GUI Design` directory.
 - **Version Control (Git):** Every completed feature (e.g., custom message, core logic, gtest) MUST be stored as an individual Git commit with a clear and descriptive message. The AI agent will explicitly instruct the user when it is time to commit at the end of a successful step.
 
 ## Progress / Workflow Tracking
@@ -42,4 +43,22 @@ When making parameter changes to fix issues for a specific map or environment:
 - [x] **Step 4:** Gazebo Environments (Office & Warehouse).
 - [x] **Step 5:** Auto SLAM Mapping Setup.
 - [ ] **Step 6:** PyQt5 GUI Implementation.
+  - **Development Strategy:**
+    - **Current Focus:** Focus entirely on front-end UI/UX design, layout creation, and progressive interface flow. (Do not write backend functionality yet).when layout is finalized then move to backend integration.
+    - **Flexibility Note:** This front-end workflow and feature set are dynamic; the UI flow can be modified or expanded over time as new requirements arise.
+  - **Global UI Requirements & Aesthetic ("Swiss" Design):**
+    - **Strictly No Extraneous Icons:** The interface must remain entirely focused on the task. Do not include any OS-style status indicators or generic icons.
+    - **Main Canvas:** Pure White (`#ffffff`) with a subtle drop shadow over an off-white/light-gray background (`#F0F2F4`). Dark Charcoal (`#1A1D21`) typography.
+    - **Universal Back Button:** A white button with a light gray border placed in the top left corner on the Mode Selection page.
+  - **GUI Interaction Flow (3-Page Flow):**
+    - The GUI follows a strict 3-page flow using a QStackedWidget (Logger and complex views have been removed).
+    - **Page 1: Initialization State:** 
+      - Heading: "Map Selection". Centered question: "On which map you want to navigate the Bot".
+      - Component: Single dropdown menu "Select Map" (White bg, light border, Vibrant Teal chevron).
+    - **Page 2: Mode Selection State:**
+      - Heading: Dynamic Map Name (e.g. "Map: Factory_Floor_1"). Centered question: "Do you want to do navigation or Mapping".
+      - Components: Two side-by-side buttons. Left: "Autonomous Navigation" (Vibrant Teal `#0D9488`), Right: "SLAM Mapping" (Muted Sage Green `#6B8F71`).
+    - **Page 3: Active Process State:**
+      - Heading: Dynamic Mode Name (e.g. "MANUAL SLAM MAPPING - MAP: FACTORY").
+      - Components: A minimalist screen displaying a large instructional text describing what the user must do (e.g. drive via terminal, click nav goal in RViz) and a large red "Stop Process" button to return to Page 2.
 - [ ] **Step 7:** Master Launch & Polish.

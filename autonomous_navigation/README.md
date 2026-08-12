@@ -3,58 +3,48 @@
 This package provides a standalone and well-optimized setup for autonomous navigation and mapping in ROS 2. It utilizes custom Gazebo environments, SLAM Toolbox, Nav2, and frontier exploration.
 
 ## Project Setup & Build
+## 1. Clone the Repository
+First, set up your ROS 2 workspace and clone the repository directly into the `src` folder. Make sure to specify the branch you want to work on:
 
-This project is completely self-contained. The exploration package (`m-explore-ros2`) is included in the `robotics_development/extras` directory so it builds automatically alongside our custom package.
-
-To build the workspace:
 ```bash
-# Navigate to your workspace root
-cd ~/ros2_ws
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
+git clone -b feature/gui --single-branch https://github.com/TalhaYasir210/robotics_development.git
 
-# Build the packages
-colcon build
-
-# Source the workspace setup
-source install/setup.bash
 ```
 
-## How to Run: Auto and Manual SLAM Mapping (Step 5)
+```bash
+#after cloning 
+cd /robotics_development
+git pull
+git submodule update --init --recursive
+```
 
-We have created an automated SLAM mapping setup where the robot uses frontier exploration to automatically drive around and map an unknown environment. You can also choose to map manually.
+## 2. To build the workspace:
 
-1. **Launch the SLAM environment:**
-   You can choose between the `office` or `warehouse` environment by passing the `env` argument = office or warehouse.
-   ou can choose between the modes by just changing the mode = auto or manual in the cammnad prompt.
-   
-   To run Auto SLAM in the office environment (default):
-   ```bash
-   ros2 launch autonomous_navigation auto_slam.launch.py env:=office mode:=auto
-   ```
-   
-   To run Manual SLAM in the warehouse environment:
-   ```bash
-   ros2 launch autonomous_navigation auto_slam.launch.py env:=warehouse mode:=manual
-   ```
-   *Note: change the name of the map office/warehouse which you want to load , In manual mode, the robot will not move on its own. You must open a new terminal and run a teleop node to drive it. Make sure to remap the topic so our stamper node can process it:*
-   ```bash
-   ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=cmd_vel_unstamped
-   ```
+```bash
 
-2. **Watch the Exploration:**
-   - Gazebo will launch with the selected environment.
-   - RViz will automatically open. 
-   - In `auto` mode, you will see the robot start driving towards the green/blue frontiers (unknown areas).
-   - Wait until the robot finishes exploring the entire environment (or drive it manually until the map is complete).
+apt-get update
+apt-get install python3-venv ros-jazzy-turtlebot3 ros-jazzy-turtlebot3-gazebo -y
 
-3. **Save the Generated Map:**
-   Once the robot stops moving and the map is complete, open a new terminal, source the workspace, and run our helper script:
-   ```bash
-   cd ~/ros2_ws/src/robotics_development/autonomous_navigation
-   ./scripts/save_map.sh my_new_map
-   ```
-   This will save the `.pgm` and `.yaml` map files into the `maps/` directory.
+python3 -m venv ros_venv
+source /opt/ros_venv/bin/activate
 
-### 4. Saving and Loading SLAM Checkpoints (Resume Mapping)
+pip install -r /ros2_ws/src/robotics_development/requirements.txt
+
+cd /ros2_ws
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --packages-up-to autonomous_navigation explore_lite explore_lite_msgs multirobot_map_merge
+
+
+source install/setup.bash
+python3 "src/robotics_development/autonomous_navigation/GUI Design/main_window.py"
+
+```
+
+
+### Saving and Loading SLAM Checkpoints (Resume Mapping)
 
 There is a major difference between saving a **Static Map** (for pure navigation later) and saving a **SLAM Checkpoint** (to resume exploring the same house tomorrow). The `map_saver_cli` command shown above saves a *Static Map*.
 
@@ -94,85 +84,11 @@ For example, to load the checkpoints:
 5. Launch `auto_slam` again! The robot will load the old map, and `explore_lite` will automatically see the remaining frontiers and resume exploring! 
 *(Note: To start a brand-new map, simply comment out the `map_file_name` line in the YAML file).*
 
-### 5. Fine-Tuning Environment Parameters
-
-Different environments (like an open `office` vs a cluttered `warehouse`) sometimes require slightly different navigation parameters for optimal exploration.
-
-For example, if the robot gets stuck in an infinite loop without moving, it usually means the `xy_goal_tolerance` is too large for a tight space.
-
-We have set up environment-specific toggles in our main configuration file:
-1. Open the configuration file: `config/nav2_params_slam.yaml`
-2. Scroll to the `goal_checker` section (around line 118) or the `inflation_layer` sections (around lines 165 & 265).
-3. Comment or uncomment the parameters based on the map you are running:
-   ```yaml
-      # --- ENVIRONMENT SPECIFIC PARAMS ---
-      # [OFFICE] Use 0.25 if mapping the open office
-      # xy_goal_tolerance: 0.25
-      
-      # [WAREHOUSE] Use 0.10 for the cluttered warehouse to prevent infinite loops
-      xy_goal_tolerance: 0.10
-      # -----------------------------------
+**Save the Generated Map:**
+   Once the robot stops moving and the map is complete, open a new terminal, source the workspace, and run our helper script:
+   ```bash
+   cd ~/ros2_ws/src/robotics_development/autonomous_navigation
+   ./scripts/save_map.sh my_new_map
    ```
-   *Similarly for the Inflation Radius (controls how wide the "danger zone" around walls is):*
-   ```yaml
-      # --- ENVIRONMENT SPECIFIC PARAMS ---
-      # [OFFICE] Use 0.35 for the open office
-      # inflation_radius: 0.35
-      
-      # [WAREHOUSE] Use 0.25 to allow passing through narrow aisles
-      inflation_radius: 0.25
-      
-      # [OFFICE] Default cost scaling factor
-      # cost_scaling_factor: 5.0
-      
-      # [WAREHOUSE] Lower factor to repel robot strongly from shelves
-      cost_scaling_factor: 1.0
-      # -----------------------------------
-   ```
-   *And for the Laser Blind Spot in `nav2_params_slam.yaml` (search for `raytrace_min_range` in the costmaps):*
-   ```yaml
-          # --- ENVIRONMENT SPECIFIC PARAMS ---
-          # [OFFICE] Use 0.35 to ignore robot footprint
-          # raytrace_min_range: 0.35
-          # obstacle_min_range: 0.35
-          
-          # [WAREHOUSE] Use 0.12 so robot isn't blind to nearby boxes
-          raytrace_min_range: 0.12
-          obstacle_min_range: 0.12
-          # -----------------------------------
-   ```
+   This will save the `.pgm` and `.yaml` map files into the `maps/` directory.
 
-4. You can also tune the **Frontier Size** in `config/explore.yaml` if the robot refuses to enter tight spaces:
-   ```yaml
-    # --- ENVIRONMENT SPECIFIC PARAMS ---
-    # [OFFICE] Use 0.25 for large open spaces
-    # min_frontier_size: 0.25
-    
-    # [WAREHOUSE] Use 0.35 to avoid exploring under slanted shelves and getting stuck
-    min_frontier_size: 0.35
-    # -----------------------------------
-   ```
-
-5. Finally, if the robot hallucinates obstacles in front of itself when driving over bumps, tune the **Laser Ignorance Height** (search for `min_obstacle_height` in the costmaps):
-   ```yaml
-          # --- ENVIRONMENT SPECIFIC PARAMS ---
-          # [OFFICE] Use 0.10 as default for flat surfaces
-          # min_obstacle_height: 0.10
-          
-          # [WAREHOUSE] Use -2.0 to ignore floor bumps completely (if any)
-          min_obstacle_height: -2.0
-          # -----------------------------------
-   ```
-
-6. To prevent the robot from crashing or rolling over, ensure `use_collision_detection` is enabled and `desired_linear_vel` is set to safe values in `FollowPath`:
-   ```yaml
-      # --- ENVIRONMENT SPECIFIC PARAMS ---
-      # [OFFICE] Use 0.20 for safe navigation
-      # desired_linear_vel: 0.20
-      
-      # [WAREHOUSE] Use 0.15 for tighter control
-      desired_linear_vel: 0.15
-      # -----------------------------------
-   ```
-
-7. Rebuild your workspace with `colcon build --packages-select autonomous_navigation` after making any changes.
