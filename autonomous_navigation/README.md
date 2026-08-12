@@ -17,7 +17,7 @@ First, set up your ROS 2 workspace and clone the repository directly into the `s
 ```bash
 mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
-git clone -b feature/gui --single-branch https://github.com/TalhaYasir210/robotics_development.git
+git clone https://github.com/TalhaYasir210/robotics_development.git
 
 ```
 
