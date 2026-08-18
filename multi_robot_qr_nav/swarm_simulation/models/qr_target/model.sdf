@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="qr_target">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <!-- Thin frame geometry (0.01m thick, 0.4m wide, 0.4m high) -->
+        <geometry><box><size>0.01 0.4 0.4</size></box></geometry>
+        <material>
+          <ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse>
+        </material>
+      </visual>
+      <collision name="collision">
+        <geometry><box><size>0.01 0.4 0.4</size></box></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
