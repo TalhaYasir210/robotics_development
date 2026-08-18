@@ -207,6 +207,8 @@
   <!-- Gazebo Harmonic LiDAR Sensor Plugin -->
   <gazebo reference="${prefix}base_footprint">
     <sensor type="gpu_lidar" name="${robot_name}_lidar">
+      <topic>/${robot_name}/scan</topic>
+      <gz_frame_id>${prefix}base_scan</gz_frame_id>
       <pose>-0.064 0 0.132 0 0 0</pose>
       <always_on>true</always_on>
       <visualize>false</visualize>
@@ -228,6 +230,9 @@
   <!-- Gazebo Harmonic Camera Sensor Plugin -->
   <gazebo reference="${prefix}base_footprint">
     <sensor type="camera" name="${robot_name}_camera">
+      <topic>/${robot_name}/camera/image_raw</topic>
+      <camera_info_topic>/${robot_name}/camera/camera_info</camera_info_topic>
+      <gz_frame_id>${prefix}camera_link</gz_frame_id>
       <pose>0.073 -0.011 0.094 0 0 0</pose>
       <always_on>true</always_on>
       <visualize>true</visualize>

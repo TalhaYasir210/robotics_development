@@ -28,19 +28,37 @@ def generate_launch_description():
         launch_arguments={'gz_args': f'-r {world_file}'}.items(),
     )
 
-    # 2. Bridge the simulation clock
-    clock_bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
-        output='screen'
-    )
-
     # 3. Define spawn locations for Bot 1 (Mapper) and Bot 2 (Lost Explorer)
     robots = [
         {'name': 'tb3_1', 'x': '0.0', 'y': '0.0', 'z': '0.1'},  # Spawned at Origin (Center)
         {'name': 'tb3_2', 'x': '-3.0', 'y': '3.0', 'z': '0.1'}   # Spawned inside Room 1 (Top-Left)
     ]
+
+    # 2. Bridge the simulation clock AND robot topics
+    bridge_args = ['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock']
+    
+    # Dynamically generate bridge arguments for both robots
+    for robot in robots:
+        name = robot['name']
+        bridge_args.extend([
+            # cmd_vel (ROS to Gazebo)
+            f'/{name}/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+            # Odometry and TF (Gazebo to ROS)
+            f'/{name}/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+            f'/{name}/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            # LiDAR (Gazebo to ROS)
+            f'/{name}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            # Camera (Gazebo to ROS)
+            f'/{name}/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+            f'/{name}/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+        ])
+
+    gz_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=bridge_args,
+        output='screen'
+    )
 
     spawn_actions = []
 
@@ -80,6 +98,6 @@ def generate_launch_description():
     return LaunchDescription([
         gazebo_resource_path,
         gazebo,
-        clock_bridge,
+        gz_bridge,
         *spawn_actions
     ])
