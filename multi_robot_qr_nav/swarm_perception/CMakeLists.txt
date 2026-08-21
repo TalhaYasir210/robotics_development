@@ -12,6 +12,26 @@ find_package(sensor_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(swarm_interfaces REQUIRED)
+
+add_executable(qr_tf_projector src/qr_tf_projector.cpp)
+
+ament_target_dependencies(qr_tf_projector 
+  rclcpp 
+  sensor_msgs 
+  cv_bridge 
+  OpenCV 
+  tf2_ros
+  geometry_msgs
+  swarm_interfaces
+)
+
+install(TARGETS
+  qr_tf_projector
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
