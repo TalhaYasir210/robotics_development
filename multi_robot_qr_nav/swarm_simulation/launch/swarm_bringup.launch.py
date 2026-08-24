@@ -1,7 +1,8 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command
 from launch_ros.actions import Node
@@ -30,8 +31,8 @@ def generate_launch_description():
 
     # 3. Define spawn locations for Bot 1 (Mapper) and Bot 2 (Lost Explorer)
     robots = [
-        {'name': 'tb3_1', 'x': '0.0', 'y': '0.0', 'z': '0.1'},  # Spawned at Origin (Center)
-        {'name': 'tb3_2', 'x': '-3.0', 'y': '3.0', 'z': '0.1'}   # Spawned inside Room 1 (Top-Left)
+        {'name': 'tb3_1', 'x': '0.0', 'y': '0.0', 'z': '0.01'},  # Spawned at Origin (Center)
+        {'name': 'tb3_2', 'x': '-3.0', 'y': '3.0', 'z': '0.01'}   # Spawned inside Room 1 (Top-Left)
     ]
 
     # 2. Bridge the simulation clock AND robot topics
@@ -43,9 +44,8 @@ def generate_launch_description():
         bridge_args.extend([
             # cmd_vel (ROS to Gazebo)
             f'/{name}/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-            # Odometry and TF (Gazebo to ROS)
+            # Odometry (Gazebo to ROS)
             f'/{name}/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            f'/{name}/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
             # LiDAR (Gazebo to ROS)
             f'/{name}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             # Camera (Gazebo to ROS)
@@ -57,10 +57,12 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=bridge_args,
+        parameters=[{'use_sim_time': True}],
         output='screen'
     )
 
     spawn_actions = []
+    last_spawn_node = None
 
     for robot in robots:
         name = robot['name']
@@ -76,7 +78,12 @@ def generate_launch_description():
             parameters=[{
                 'robot_description': robot_desc_command,
                 'use_sim_time': True
-            }]
+            }],
+            remappings=[
+                ('/clock', '/clock'),
+                ('/tf', f'/{name}/tf'),
+                ('/tf_static', f'/{name}/tf_static')
+            ]
         )
         
         spawn_node = Node(
@@ -94,10 +101,19 @@ def generate_launch_description():
         
         spawn_actions.append(rsp_node)
         spawn_actions.append(spawn_node)
+        last_spawn_node = spawn_node
+
+    # Deterministically start bridge ONLY after the last robot has successfully spawned
+    bridge_event = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=last_spawn_node,
+            on_exit=[gz_bridge]
+        )
+    )
 
     return LaunchDescription([
         gazebo_resource_path,
         gazebo,
-        gz_bridge,
-        *spawn_actions
+        *spawn_actions,
+        bridge_event
     ])

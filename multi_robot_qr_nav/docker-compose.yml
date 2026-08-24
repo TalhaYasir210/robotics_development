@@ -1,0 +1,43 @@
+version: '3.8'
+
+x-base-service: &base-service
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  network_mode: host
+  ipc: host
+  volumes:
+    - .:/ros2_ws/src/robotics_development/multi_robot_qr_nav:rw
+  tty: true
+  stdin_open: true
+  command: bash
+
+services:
+  simulation:
+    <<: *base-service
+    container_name: qr_nav_simulation
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - .:/ros2_ws/src/robotics_development/multi_robot_qr_nav:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  mapper:
+    <<: *base-service
+    container_name: qr_nav_mapper
+
+  brain_perception:
+    <<: *base-service
+    container_name: qr_nav_brain
+
+  navigation:
+    <<: *base-service
+    container_name: qr_nav_navigation
