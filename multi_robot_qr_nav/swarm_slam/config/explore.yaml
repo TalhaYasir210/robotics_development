@@ -15,5 +15,5 @@
     orientation_scale: 0.0
     gain_scale: 0.1
     transform_tolerance: 0.3
-    min_frontier_size: 0.35 
+    min_frontier_size: 0.25 
     use_sim_time: true

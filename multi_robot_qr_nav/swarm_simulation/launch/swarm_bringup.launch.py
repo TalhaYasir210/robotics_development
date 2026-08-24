@@ -31,8 +31,8 @@ def generate_launch_description():
 
     # 3. Define spawn locations for Bot 1 (Mapper) and Bot 2 (Lost Explorer)
     robots = [
-        {'name': 'tb3_1', 'x': '0.0', 'y': '0.0', 'z': '0.01'},  # Spawned at Origin (Center)
-        {'name': 'tb3_2', 'x': '-3.0', 'y': '3.0', 'z': '0.01'}   # Spawned inside Room 1 (Top-Left)
+        {'name': 'tb3_1', 'x': '0.0', 'y': '0.0', 'z': '0.03'},  # Spawned at Origin (Center)
+        {'name': 'tb3_2', 'x': '-3.0', 'y': '3.0', 'z': '0.03'}   # Spawned inside Room 1 (Top-Left)
     ]
 
     # 2. Bridge the simulation clock AND robot topics
