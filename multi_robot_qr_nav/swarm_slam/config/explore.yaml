@@ -10,10 +10,10 @@
     
     # 3. Your custom tuning parameters
     planner_frequency: 0.1
-    progress_timeout: 30.0
+    progress_timeout: 300.0
     potential_scale: 50.0
     orientation_scale: 0.0
     gain_scale: 0.01
     transform_tolerance: 0.3
-    min_frontier_size: 0.25 
+    min_frontier_size: 0.1 
     use_sim_time: true

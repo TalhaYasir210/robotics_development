@@ -21,8 +21,8 @@ def generate_launch_description():
         parameters=[{
             'robot_name': 'tb3_1',
             'global_frame': 'map',
-            'target_distance': 0.45,
-            'qr_size': 0.2
+            'target_distance': 0.20,
+            'qr_size': 0.28
         }],
         remappings=[
             ('/tf', '/tb3_1/tf'),
