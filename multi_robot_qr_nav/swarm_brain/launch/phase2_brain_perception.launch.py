@@ -48,8 +48,18 @@ def generate_launch_description():
         output='screen'
     )
 
+    # 4. Map Saver Client for Bot 1 (Mapper)
+    # Role: Subscribes to /tb3_1/map and sends it to the database every 15s
+    map_saver_node = Node(
+        package='swarm_brain',
+        executable='map_saver_client',
+        name='map_saver_tb3_1',
+        output='screen'
+    )
+
     return LaunchDescription([
         database_node,
         bot1_perception_node,
-        bot2_perception_node
+        bot2_perception_node,
+        map_saver_node
     ])
