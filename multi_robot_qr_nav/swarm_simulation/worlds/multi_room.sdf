@@ -65,16 +65,16 @@
 
     </model>
 
-    <!-- Picture-Frame QR Targets Mounted Flat on Walls at Robot Camera Height (Z = 0.45m) -->
+    <!-- Picture-Frame QR Targets Mounted Flat on Walls at Robot Camera Height (Z = 0.2) -->
     <!-- Room 1 North Wall -->
-    <include><uri>model://qr_target_1</uri><name>qr_room1</name><pose>-3 4.89 0.45 0 0 1.5708</pose></include>
+    <include><uri>model://qr_target_1</uri><name>qr_room1</name><pose>-3 4.89 0.2 0 0 1.5708</pose></include>
     <!-- Room 2 East Wall -->
-    <include><uri>model://qr_target_2</uri><name>qr_room2</name><pose>4.89 3 0.45 0 0 0</pose></include>
+    <include><uri>model://qr_target_2</uri><name>qr_room2</name><pose>4.89 3 0.2 0 0 0</pose></include>
     <!-- Room 3 South Wall -->
-    <include><uri>model://qr_target_3</uri><name>qr_room3</name><pose>3.5 -4.89 0.45 0 0 1.5708</pose></include>
+    <include><uri>model://qr_target_3</uri><name>qr_room3</name><pose>3.5 -4.89 0.2 0 0 1.5708</pose></include>
     <!-- Hall West Wall -->
-    <include><uri>model://qr_target_4</uri><name>qr_hall1</name><pose>-4.89 -2 0.45 0 0 0</pose></include>
+    <include><uri>model://qr_target_4</uri><name>qr_hall1</name><pose>-4.89 -2 0.2 0 0 0</pose></include>
     <!-- Hall South Wall -->
-    <include><uri>model://qr_target_4</uri><name>qr_hall2</name><pose>-2 -4.89 0.45 0 0 1.5708</pose></include>
+    <include><uri>model://qr_target_5</uri><name>qr_hall2</name><pose>-2 -4.89 0.2 0 0 1.5708</pose></include>
   </world>
 </sdf>

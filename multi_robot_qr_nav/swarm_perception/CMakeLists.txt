@@ -14,24 +14,54 @@ find_package(image_transport REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(swarm_interfaces REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(nav2_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
-add_executable(qr_tf_projector src/qr_tf_projector.cpp)
+add_executable(bot2_projector src/bot2_projector.cpp)
 
-ament_target_dependencies(qr_tf_projector 
+ament_target_dependencies(bot2_projector 
   rclcpp 
   sensor_msgs 
   cv_bridge 
   OpenCV 
   tf2_ros
+  tf2_geometry_msgs
   geometry_msgs
   swarm_interfaces
 )
+target_link_libraries(bot2_projector zbar)
+
+add_executable(bot1_interceptor src/bot1_interceptor.cpp)
+ament_target_dependencies(bot1_interceptor
+  rclcpp
+  rclcpp_action
+  sensor_msgs
+  cv_bridge
+  OpenCV
+  tf2_ros
+  tf2_geometry_msgs
+  geometry_msgs
+  nav2_msgs
+  std_msgs
+  swarm_interfaces
+)
+target_link_libraries(bot1_interceptor zbar)
 
 install(TARGETS
-  qr_tf_projector
+  bot2_projector
+  bot1_interceptor
   DESTINATION lib/${PROJECT_NAME}
 )
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

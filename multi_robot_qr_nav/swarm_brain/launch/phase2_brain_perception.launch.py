@@ -12,14 +12,21 @@ def generate_launch_description():
     )
 
     # 2. Perception Node for Bot 1 (Mapper)
-    # Role: mapper -> Computes global TF and calls /save_qr
+    # Role: mapper -> intercepts QR and drives exactly to it, then calls /save_qr
     bot1_perception_node = Node(
         package='swarm_perception',
-        executable='qr_tf_projector',
-        name='qr_projector_tb3_1',
-        parameters=[{'robot_role': 'mapper'}],
+        executable='bot1_interceptor',
+        name='qr_interceptor_tb3_1',
+        namespace='tb3_1',
+        parameters=[{
+            'robot_name': 'tb3_1',
+            'global_frame': 'map',
+            'target_distance': 0.20,
+            'qr_size': 0.28
+        }],
         remappings=[
-            ('camera/image_raw', '/tb3_1/camera/image_raw')
+            ('/tf', '/tb3_1/tf'),
+            ('/tf_static', '/tb3_1/tf_static')
         ],
         output='screen'
     )
@@ -28,18 +35,31 @@ def generate_launch_description():
     # Role: explorer -> Queries /get_qr and publishes /tb3_2/initialpose
     bot2_perception_node = Node(
         package='swarm_perception',
-        executable='qr_tf_projector',
+        executable='bot2_projector',
         name='qr_projector_tb3_2',
         parameters=[{'robot_role': 'explorer'}],
         remappings=[
             ('camera/image_raw', '/tb3_2/camera/image_raw'),
-            ('initialpose', '/tb3_2/initialpose')
+            ('camera/camera_info', '/tb3_2/camera/camera_info'),
+            ('initialpose', '/tb3_2/initialpose'),
+            ('/tf', '/tb3_2/tf'),
+            ('/tf_static', '/tb3_2/tf_static')
         ],
+        output='screen'
+    )
+
+    # 4. Map Saver Client for Bot 1 (Mapper)
+    # Role: Subscribes to /tb3_1/map and sends it to the database every 15s
+    map_saver_node = Node(
+        package='swarm_brain',
+        executable='map_saver_client',
+        name='map_saver_tb3_1',
         output='screen'
     )
 
     return LaunchDescription([
         database_node,
         bot1_perception_node,
-        bot2_perception_node
+        bot2_perception_node,
+        map_saver_node
     ])
