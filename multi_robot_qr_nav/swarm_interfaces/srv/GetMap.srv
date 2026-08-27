@@ -1,0 +1,4 @@
+---
+nav_msgs/OccupancyGrid map
+bool is_mapping_complete
+bool success

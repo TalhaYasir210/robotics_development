@@ -13,10 +13,14 @@ find_package(nav_msgs REQUIRED)
 find_package(swarm_interfaces REQUIRED)
 
 add_executable(database_node src/database_node.cpp)
-ament_target_dependencies(database_node rclcpp swarm_interfaces geometry_msgs)
+ament_target_dependencies(database_node rclcpp swarm_interfaces geometry_msgs nav_msgs)
+
+add_executable(map_saver_client src/map_saver_client.cpp)
+ament_target_dependencies(map_saver_client rclcpp swarm_interfaces nav_msgs rcl_interfaces)
 
 install(TARGETS
   database_node
+  map_saver_client
   DESTINATION lib/${PROJECT_NAME}
 )
 
