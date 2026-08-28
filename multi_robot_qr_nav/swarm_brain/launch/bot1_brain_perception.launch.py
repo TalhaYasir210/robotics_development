@@ -31,25 +31,8 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 3. Perception Node for Bot 2 (Explorer)
-    # Role: explorer -> Queries /get_qr and publishes /tb3_2/initialpose
-    bot2_perception_node = Node(
-        package='swarm_perception',
-        executable='bot2_projector',
-        name='qr_projector_tb3_2',
-        parameters=[{'robot_role': 'explorer'}],
-        remappings=[
-            ('camera/image_raw', '/tb3_2/camera/image_raw'),
-            ('camera/camera_info', '/tb3_2/camera/camera_info'),
-            ('initialpose', '/tb3_2/initialpose'),
-            ('/tf', '/tb3_2/tf'),
-            ('/tf_static', '/tb3_2/tf_static')
-        ],
-        output='screen'
-    )
-
-    # 4. Map Saver Client for Bot 1 (Mapper)
-    # Role: Subscribes to /tb3_1/map and sends it to the database every 15s
+    # 3. Map Saver Client for Bot 1 (Mapper)
+    # Role: Subscribes to /map and sends it to the database every 15s
     map_saver_node = Node(
         package='swarm_brain',
         executable='map_saver_client',
@@ -60,6 +43,5 @@ def generate_launch_description():
     return LaunchDescription([
         database_node,
         bot1_perception_node,
-        bot2_perception_node,
         map_saver_node
     ])
