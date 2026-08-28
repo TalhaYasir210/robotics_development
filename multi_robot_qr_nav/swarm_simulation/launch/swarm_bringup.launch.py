@@ -21,6 +21,7 @@ def generate_launch_description():
     world_file = os.path.join(pkg_swarm_sim, 'worlds', 'multi_room.sdf')
     xacro_file = os.path.join(pkg_swarm_sim, 'urdf', 'tb3_namespaced.urdf.xacro')
     rviz_config_file = os.path.join(pkg_swarm_sim, 'rviz', 'bot1_view.rviz')
+    bot2_rviz_config_file = os.path.join(pkg_swarm_sim, 'rviz', 'bot2_view.rviz')
 
     # 1. Launch Gazebo Harmonic with the multi-room world
     gazebo = IncludeLaunchDescription(
@@ -126,10 +127,25 @@ def generate_launch_description():
         output='screen'
     )
 
+    # 5. RViz Node for Bot 2 visualization
+    bot2_rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2_bot2',
+        arguments=['-d', bot2_rviz_config_file],
+        parameters=[{'use_sim_time': True}],
+        remappings=[
+            ('/tf', '/tb3_2/tf'),
+            ('/tf_static', '/tb3_2/tf_static')
+        ],
+        output='screen'
+    )
+
     return LaunchDescription([
         gazebo_resource_path,
         gazebo,
         *spawn_actions,
         bridge_event,
-        rviz_node
+        rviz_node,
+        bot2_rviz_node
     ])

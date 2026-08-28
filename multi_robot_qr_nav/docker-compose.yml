@@ -37,7 +37,3 @@ services:
   brain_perception:
     <<: *base-service
     container_name: qr_nav_brain
-
-  navigation:
-    <<: *base-service
-    container_name: qr_nav_navigation

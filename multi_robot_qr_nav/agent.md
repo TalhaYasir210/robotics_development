@@ -19,16 +19,19 @@ AGENT INSTRUCTION: Read this file before suggesting architectural changes or wri
 *   **Rule 1**: Always use proper namespacing (`tb3_1`, `tb3_2`) and `tf_prefix` to prevent TF tree collisions.
 *   **Rule 2**: Avoid symlink installs (`--symlink-install`); use standard colcon build to prevent caching issues.
 
-# 3. Current Progress (Completed - Phase 1)
+# 3. Current Progress (Completed)
 
-*   **swarm_interfaces**: Created custom `.srv` (SaveQR, GetQR) and `.msg` (QRDetection).
-*   **swarm_simulation**: Built `maze_world.sdf` with local portable models (`maze_model_rs`, `qr_target`).
-*   **Robot URDF**: Implemented `tb3_namespaced.urdf.xacro` (TurtleBot3 Waffle Pi) utilizing official meshes and Gazebo Harmonic system plugins (DiffDrive, GPU LiDAR, Camera).
+*   **swarm_interfaces**: Created custom `.srv` (SaveQR, GetQR, SaveMap, GetMap) and `.msg` (QRDetection).
+*   **swarm_simulation**: Built `maze_world.sdf` with local portable models.
+*   **Robot URDF**: Implemented `tb3_namespaced.urdf.xacro` (TurtleBot3 Waffle Pi) utilizing official meshes and Gazebo Harmonic system plugins.
 *   **Bringup**: Wrote `swarm_bringup.launch.py` which bridges the simulation clock and successfully spawns both robots in the maze.
+*   **swarm_brain**: Implemented `database_node.cpp` (in-memory storage of QR poses and the global Map with distinct child loggers) and `map_saver_client.cpp` (syncs Bot 1's map every 15s and detects exploration completion).
+*   **swarm_perception**: 
+    - Implemented `bot1_interceptor.cpp`: Visually servos Bot 1 to QR codes and saves their accurate global pose to the database. Obstacle avoidance is intentionally disabled during servoing for aggressive approaches.
+    - Implemented `explorer_node.cpp` (Bot 2's FSM): Blindly wanders using LiDAR obstacle avoidance, visually servos to QR codes (with recovery strategies), calculates inverse kinematics for initial pose, downloads the Map from the database, and dynamically triggers AMCL. Continuous map polling stops once the database marks mapping as complete.
+    - Configured `nav2_params_bot2.yaml` and `bot2_navigation.launch.py`: Fully functional AMCL and Nav2 stack for Bot 2 using `RewrittenYaml` to dynamically inject the `tb3_2` namespace.
+*   **Launch Files**: Separated `bot1_brain_perception.launch.py` and `bot2_brain_perception.launch.py` for full independent control.
 
 # 4. Next Steps (Action Items)
 
-*   **Phase 2 (Current Focus)**: Implement the Backend Database server in `swarm_brain/src/database_node.cpp` (using unordered map to store poses) and the QR Vision/TF Projector in `swarm_perception`.
-*   **Phase 3**: Create split navigation logic in `swarm_navigation` (slam_toolbox for Bot 1, nav2_amcl for Bot 2) subscribing to a shared global `/map` topic.
-*   **Phase 4**: Write the C++ Finite State Machine controllers (`mapper_controller.cpp`, `explorer_controller.cpp`).
-*   **Phase 5**: Finalize Docker multi-container orchestration.
+*   **Phase 4 (Next Focus)**: Finalize Docker multi-container orchestration for deploying the fully asynchronous system.

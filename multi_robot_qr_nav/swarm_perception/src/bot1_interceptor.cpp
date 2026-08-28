@@ -325,16 +325,6 @@ private:
         auto now = this->now();
 
         if (state_ == State::SERVOING) {
-            // [LiDAR Obstacle Avoidance Disabled per User Request]
-            // if (obstacle_detected_) {
-            //     RCLCPP_WARN(this->get_logger(), "[Servoing] Obstacle too close (Sides or Front)! Aborting to prevent crash.");
-            //     geometry_msgs::msg::Twist twist;
-            //     cmd_vel_pub_->publish(twist);
-            //     state_ = State::SEARCHING;
-            //     resumeExploration();
-            //     return;
-            // }
-
             double time_since_last_seen = (now - last_seen_time_).seconds();
             
             // Anti-Overshoot Brake: If we haven't seen it in 0.3 seconds, STOP moving!

@@ -18,11 +18,12 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(swarm_interfaces REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
-add_executable(bot2_projector src/bot2_projector.cpp)
+add_executable(explorer_node src/explorer_node.cpp)
 
-ament_target_dependencies(bot2_projector 
+ament_target_dependencies(explorer_node 
   rclcpp 
   sensor_msgs 
   cv_bridge 
@@ -30,9 +31,11 @@ ament_target_dependencies(bot2_projector
   tf2_ros
   tf2_geometry_msgs
   geometry_msgs
+  nav_msgs
+  nav2_msgs
   swarm_interfaces
 )
-target_link_libraries(bot2_projector zbar)
+target_link_libraries(explorer_node zbar)
 
 add_executable(bot1_interceptor src/bot1_interceptor.cpp)
 ament_target_dependencies(bot1_interceptor
@@ -51,13 +54,14 @@ ament_target_dependencies(bot1_interceptor
 target_link_libraries(bot1_interceptor zbar)
 
 install(TARGETS
-  bot2_projector
+  explorer_node
   bot1_interceptor
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY
   launch
+  config
   DESTINATION share/${PROJECT_NAME}
 )
 
