@@ -1,26 +1,18 @@
-version: '3.8'
-
-x-base-service: &base-service
-  build:
-    context: .
-    dockerfile: docker/Dockerfile
-  network_mode: host
-  ipc: host
-  volumes:
-    - .:/ros2_ws/src/robotics_development/multi_robot_qr_nav:rw
-  tty: true
-  stdin_open: true
-  command: bash
 
 services:
   simulation:
-    <<: *base-service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_PACKAGES: "swarm_simulation"
     container_name: qr_nav_simulation
+    network_mode: host
+    ipc: host
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
     volumes:
-      - .:/ros2_ws/src/robotics_development/multi_robot_qr_nav:rw
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     deploy:
       resources:
@@ -29,11 +21,30 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    command: ros2 launch swarm_simulation swarm_bringup.launch.py
 
   mapper:
-    <<: *base-service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_PACKAGES: "swarm_slam explore_lite_msgs explore_lite"
     container_name: qr_nav_mapper
+    network_mode: host
+    ipc: host
+    command: ros2 launch swarm_slam auto_mapping.launch.py
+    depends_on:
+      - simulation
 
   brain_perception:
-    <<: *base-service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_PACKAGES: "swarm_perception swarm_interfaces swarm_brain"
     container_name: qr_nav_brain
+    network_mode: host
+    ipc: host
+    command: ros2 launch swarm_brain swarm_brain_perception.launch.py
+    depends_on:
+      - simulation

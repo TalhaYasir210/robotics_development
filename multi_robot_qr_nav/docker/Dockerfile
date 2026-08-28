@@ -2,25 +2,40 @@ FROM osrf/ros:jazzy-desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install basic build tools and OpenCV headers
+# Install common dependencies
 RUN apt-get update && apt-get install -y \
     python3-colcon-common-extensions \
     libopencv-dev \
     ros-jazzy-ros-gz \
     ros-jazzy-navigation2 \
     ros-jazzy-nav2-bringup \
+    libzbar-dev \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up the workspace
 WORKDIR /ros2_ws
 
-# Copy source code into the exact target path
-COPY . /ros2_ws/src/robotics_development/multi_robot_qr_nav/
+# Copy Python requirements and install
+COPY requirements.txt /ros2_ws/
+RUN pip3 install -r requirements.txt --break-system-packages || true
 
-# Update rosdep and install all package dependencies
+# Copy only the source code
+COPY ./ /ros2_ws/src/multi_robot_qr_nav/
+
+# Install ROS dependencies using rosdep
 RUN rosdep update && \
-    rosdep install --from-paths src --ignore-src -r -y && \
-    rm -rf /var/lib/apt/lists/*
+    rosdep install --from-paths src --ignore-src -r -y || true
 
-# Auto-source ROS 2 on container entry
-RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc
+# ARG to specify which packages to build for this specific container
+ARG BUILD_PACKAGES=""
+RUN if [ -n "$BUILD_PACKAGES" ]; then \
+        bash -c "source /opt/ros/jazzy/setup.bash && colcon build --packages-up-to $BUILD_PACKAGES"; \
+    else \
+        bash -c "source /opt/ros/jazzy/setup.bash && colcon build"; \
+    fi
+
+# Copy entrypoint script
+COPY docker/entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
