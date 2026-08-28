@@ -14,7 +14,7 @@ To run this project, you only need Docker installed on your system. All ROS 2 pa
 Because the entire architecture is fully containerized and optimized, you can build and launch the simulation, mapper, and brain containers with a single command:
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
 If you want to view the specific logs for any container in real-time, you can use the following commands:

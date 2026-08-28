@@ -32,6 +32,13 @@ AGENT INSTRUCTION: Read this file before suggesting architectural changes or wri
     - Configured `nav2_params_bot2.yaml` and `bot2_navigation.launch.py`: Fully functional AMCL and Nav2 stack for Bot 2 using `RewrittenYaml` to dynamically inject the `tb3_2` namespace.
 *   **Launch Files**: Separated `bot1_brain_perception.launch.py` and `bot2_brain_perception.launch.py` for full independent control.
 
+*   **Docker Orchestration (Phase 4)**: 
+    - Implemented a 3-container production-ready deployment (`simulation`, `mapper`, `brain_perception`) via `docker-compose.yml`.
+    - Automated dependency management (`rosdep` for OS, `requirements.txt` for Python, and explicitly installed `libzbar-dev`).
+    - Utilized `BUILD_PACKAGES` build arguments to strictly isolate package compilation for each container.
+    - Created a unified `swarm_brain_perception.launch.py` master launch file to run both Bot 1 and Bot 2's backend/perception nodes cleanly within the single brain container.
+    - Cleaned up workspace paths to allow single-command `docker compose up --build` deployment from any client host directory.
+
 # 4. Next Steps (Action Items)
 
-*   **Phase 4 (Next Focus)**: Finalize Docker multi-container orchestration for deploying the fully asynchronous system.
+*   **Phase 5 (Next Focus)**: Final system testing, parameter tuning, or potential hardware deployment scaling. The core software architecture is complete and fully containerized.
