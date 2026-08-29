@@ -2,9 +2,6 @@
 
 A fully asynchronous, decentralized multi-robot system using ROS 2 Jazzy and Gazebo Harmonic. In this project, an explorer robot dynamically localizes itself within a mapper robot's dynamically generated map by visually servoing to QR codes and referencing a central in-memory database.
 
-## Demo Video
-
-*[Video Demo will be added here later]*
 
 ## Prerequisites
 
@@ -20,7 +17,7 @@ Clone the repository and switch to the working directory:
 ```bash
 git clone https://github.com/TalhaYasir210/robotics_development.git
 cd robotics_development/multi_robot_qr_nav
-# git checkout <branch-name>  # Switch to your branch if you aren't on main
+git switch multi-bot-ai-navigation
 ```
 
 ### 2. Allow GUI Forwarding
@@ -63,3 +60,10 @@ docker compose down
 * **Bot 2 (The Explorer):** It starts completely blind without any map and begins wandering the environment. It uses a custom obstacle avoidance and yielding algorithm to avoid static walls and smartly yield/escape if it detects the dynamic Bot 1 approaching it.
 * **Solving the Lost Robot Problem:** While wandering, if Bot 2 visually spots a QR code through its camera, it enters a visual servoing state to align with it. It then queries the central database to check if Bot 1 has already mapped that specific QR code. If the database returns the coordinates, Bot 2 calculates the inverse kinematics to perfectly localize its exact position and orientation within Bot 1's map frame.
 * **Dynamic Map Synchronization:** Once localized, Bot 2 requests the actual generated map from the database and initializes its own Nav2 stack. From that point on, it operates as a fully localized robot navigating inside the dynamically updated map provided by Bot 1.
+
+
+
+
+<img width="2048" height="1152" alt="continuously recieving updated map from bot1(2)" src="https://github.com/user-attachments/assets/f9fdb13c-96a7-4b4d-906b-26c12a2717d7" />
+<img width="2048" height="1152" alt="continuously recieving updated map from bot1(1)" src="https://github.com/user-attachments/assets/7b1e00fe-7358-47cc-8c79-b5d82d3aacee" />
+<img width="2048" height="1152" alt="continuously recieving updated map from bot1" src="https://github.com/user-attachments/assets/470ed876-bd23-4ef6-807c-8dd38a0f1b27" />
