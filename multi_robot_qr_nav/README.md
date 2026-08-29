@@ -1,4 +1,4 @@
-# Multi-Robot Kidnapped Robot Swarm
+# Multi-Robot Swarm
 
 A fully asynchronous, decentralized multi-robot system using ROS 2 Jazzy and Gazebo Harmonic. In this project, an explorer robot dynamically localizes itself within a mapper robot's dynamically generated map by visually servoing to QR codes and referencing a central in-memory database.
 
