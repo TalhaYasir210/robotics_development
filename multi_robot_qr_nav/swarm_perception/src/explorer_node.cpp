@@ -105,6 +105,9 @@ private:
     rclcpp::Time check_start_time_;
     double closest_obstacle_dist_ = 999.0;
     double closest_obstacle_angle_ = 0.0;
+    double left_clearance_ = 999.0;
+    double right_clearance_ = 999.0;
+    double front_60_dist_ = 999.0;
     double ignore_checking_until_dist_ = -1.0;
     
     std::string target_qr_payload_;
@@ -156,6 +159,9 @@ private:
 
         double min_dist = 999.0;
         double min_angle = 0.0;
+        double min_left = 999.0;
+        double min_right = 999.0;
+        double min_front_60 = 999.0;
 
         for (int i = 0; i < num_ranges; ++i) {
             double range = msg->ranges[i];
@@ -172,9 +178,21 @@ private:
                 min_angle = angle_deg;
             }
 
-            // Front cone for wandering (0.5m)
+            // Left vs Right clearance for smart wandering
+            if (angle_deg > 0.0 && angle_deg <= 90.0) {
+                if (range < min_left) min_left = range;
+            } else if (angle_deg >= 270.0 && angle_deg < 360.0) {
+                if (range < min_right) min_right = range;
+            }
+
+            // Front 60 (±30) for Bot 1 dynamic detection
+            if (angle_deg <= 30.0 || angle_deg >= 330.0) {
+                if (range < min_front_60) min_front_60 = range;
+            }
+
+            // Front cone for wandering (increased detection range and angle)
             if (state_ == State::SEARCHING || state_ == State::CHECKING_OBSTACLE || state_ == State::YIELDING) {
-                if ((angle_deg <= 45.0 || angle_deg >= 315.0) && range < 0.50) {
+                if ((angle_deg <= 90.0 || angle_deg >= 270.0) && range < 1.20) {
                     local_obstacle = true;
                 }
             } 
@@ -187,6 +205,9 @@ private:
         }
         closest_obstacle_dist_ = min_dist;
         closest_obstacle_angle_ = min_angle;
+        left_clearance_ = min_left;
+        right_clearance_ = min_right;
+        front_60_dist_ = min_front_60;
         obstacle_detected_ = local_obstacle;
     }
 
@@ -201,25 +222,30 @@ private:
                 return;
             }
 
-            if (closest_obstacle_dist_ < 5.0 && closest_obstacle_dist_ > 0.5) {
-                if (ignore_checking_until_dist_ < 0 || closest_obstacle_dist_ > ignore_checking_until_dist_ + 0.3) {
+            if (front_60_dist_ < 1.5 && front_60_dist_ > 0.2) {
+                if (ignore_checking_until_dist_ < 0 || front_60_dist_ > ignore_checking_until_dist_ + 0.3) {
                     state_ = State::CHECKING_OBSTACLE;
                     check_start_time_ = this->now();
-                    dist_at_check_ = closest_obstacle_dist_;
+                    dist_at_check_ = front_60_dist_;
                     geometry_msgs::msg::Twist twist;
                     cmd_vel_pub_->publish(twist); // Stop
-                    RCLCPP_INFO(this->get_logger(), "[Smart Yield] Obstacle detected at %.2fm. Stopping to check if it's Bot 1...", closest_obstacle_dist_);
+                    RCLCPP_INFO(this->get_logger(), "[Smart Yield] Obstacle in front 60deg at %.2fm. Checking if dynamic...", front_60_dist_);
                     return;
                 }
-            } else if (closest_obstacle_dist_ > 5.0) {
+            } else if (front_60_dist_ > 1.5) {
                 ignore_checking_until_dist_ = -1.0;
             }
 
             geometry_msgs::msg::Twist twist;
             if (obstacle_detected_) {
-                twist.angular.z = 0.5; // Turn left to avoid
+                if (left_clearance_ > right_clearance_) {
+                    twist.angular.z = 0.5; // More space on left
+                } else {
+                    twist.angular.z = -0.5; // More space on right
+                }
             } else {
                 twist.linear.x = 0.2; // Drive forward
+                twist.angular.z = 0.2 * std::sin(this->now().seconds()); // Weave slightly to break out of rooms
             }
             cmd_vel_pub_->publish(twist);
         } else if (state_ == State::CHECKING_OBSTACLE) {
@@ -228,32 +254,27 @@ private:
             
             double elapsed = (this->now() - check_start_time_).seconds();
             if (elapsed > 0.5) {
-                if (closest_obstacle_dist_ < dist_at_check_ - 0.05) {
-                    RCLCPP_WARN(this->get_logger(), "[Smart Yield] Obstacle is MOVING towards us (%.2fm -> %.2fm). Yielding to Bot 1!", dist_at_check_, closest_obstacle_dist_);
+                if (front_60_dist_ < dist_at_check_ - 0.05) {
+                    RCLCPP_WARN(this->get_logger(), "[Smart Yield] Obstacle is MOVING towards us (%.2fm -> %.2fm). Yielding to Bot 1!", dist_at_check_, front_60_dist_);
                     state_ = State::YIELDING;
                 } else {
                     RCLCPP_INFO(this->get_logger(), "[Smart Yield] Obstacle is static. Resuming search.");
                     state_ = State::SEARCHING;
-                    ignore_checking_until_dist_ = closest_obstacle_dist_;
+                    ignore_checking_until_dist_ = front_60_dist_;
                 }
             }
         } else if (state_ == State::YIELDING) {
             geometry_msgs::msg::Twist twist;
             
-            if (closest_obstacle_dist_ < 1.0) {
-                if (closest_obstacle_angle_ <= 90.0 || closest_obstacle_angle_ >= 270.0) {
-                    twist.linear.x = -0.15; // Reverse
-                    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "[Smart Yield] Bot 1 is close in front (%.2fm)! Reversing to make space...", closest_obstacle_dist_);
-                } else {
-                    twist.linear.x = 0.15; // Move forward
-                    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "[Smart Yield] Bot 1 is close behind (%.2fm)! Escaping forward...", closest_obstacle_dist_);
-                }
+            if (front_60_dist_ < 1.0) {
+                twist.linear.x = -0.15; // Reverse
+                RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "[Smart Yield] Bot 1 is close in front (%.2fm)! Reversing to make space...", front_60_dist_);
             } else {
                 twist.linear.x = 0.0; // Stay stopped
             }
             cmd_vel_pub_->publish(twist);
 
-            if (closest_obstacle_dist_ > 4.5 && !obstacle_detected_) {
+            if (front_60_dist_ > 1.5 && !obstacle_detected_) {
                 RCLCPP_INFO(this->get_logger(), "[Smart Yield] Path is clear. Resuming search!");
                 state_ = State::SEARCHING;
                 ignore_checking_until_dist_ = -1.0;
@@ -292,8 +313,8 @@ private:
             double elapsed = (this->now() - recovery_start_time_).seconds();
             geometry_msgs::msg::Twist twist;
             twist.linear.x = 0.0;
-            if (elapsed < 13.0) {
-                twist.angular.z = 0.5; // Spin Left (CCW)
+            if (elapsed < 42.0) {
+                twist.angular.z = 0.15; // Spin slowly to avoid motion blur
             } else {
                 twist.angular.z = 0.0;
                 RCLCPP_WARN(this->get_logger(), "[Recovery] 360 Sweep finished. QR code not found. Aborting.");
@@ -305,8 +326,8 @@ private:
             double elapsed = (this->now() - periodic_sweep_start_time_).seconds();
             geometry_msgs::msg::Twist twist;
             twist.linear.x = 0.0;
-            if (elapsed < 13.0) {
-                twist.angular.z = 0.5; // Spin Left (CCW)
+            if (elapsed < 42.0) {
+                twist.angular.z = 0.15; // Spin slowly to avoid motion blur
             } else {
                 twist.angular.z = 0.0;
                 RCLCPP_INFO(this->get_logger(), "[Wanderer] Periodic Sweep finished. Resuming wandering.");
@@ -331,8 +352,8 @@ private:
         } else if (state_ == State::TURN_AWAY) {
             double elapsed = (this->now() - turn_away_start_time_).seconds();
             geometry_msgs::msg::Twist twist;
-            if (elapsed < 3.0) {
-                twist.angular.z = 0.75; // Fast spin to turn away
+            if (elapsed < 6.0) {
+                twist.angular.z = 0.4; // Slower turn away
                 twist.linear.x = 0.0;
             } else {
                 twist.angular.z = 0.0;
