@@ -93,7 +93,8 @@ def generate_launch_description():
                     'params_file': nav2_config,
                     'namespace': namespace,
                     'use_remappings': 'true',
-                    'autostart': 'false'
+                    'autostart': 'false',
+                    'use_collision_monitor': 'False'
                 }.items()
             )
         ]

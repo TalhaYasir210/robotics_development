@@ -22,8 +22,11 @@ using namespace std::chrono_literals;
 
 enum class State {
     SEARCHING,
+    CHECKING_OBSTACLE,
+    YIELDING,
     SERVOING,
     RECOVERY_SWEEP,
+    PERIODIC_SWEEP,
     BLIND_APPROACH,
     LOCALIZING,
     TURN_AWAY,
@@ -83,6 +86,8 @@ public:
         control_timer_ = this->create_wall_timer(
             100ms, std::bind(&ExplorerNode::controlLoop, this));
 
+        last_sweep_end_time_ = this->now();
+
         RCLCPP_INFO(this->get_logger(), "Bot 2 Explorer initialized. Blind Wandering started!");
     }
 
@@ -96,11 +101,19 @@ private:
     State state_ = State::SEARCHING;
     bool obstacle_detected_ = false;
     
+    double dist_at_check_ = 0.0;
+    rclcpp::Time check_start_time_;
+    double closest_obstacle_dist_ = 999.0;
+    double closest_obstacle_angle_ = 0.0;
+    double ignore_checking_until_dist_ = -1.0;
+    
     std::string target_qr_payload_;
     tf2::Transform latest_tf_cam_to_qr_;
     double last_Z_ = 999.0;
     rclcpp::Time last_seen_time_;
     rclcpp::Time recovery_start_time_;
+    rclcpp::Time periodic_sweep_start_time_;
+    rclcpp::Time last_sweep_end_time_;
     rclcpp::Time blind_approach_start_time_;
     rclcpp::Time turn_away_start_time_;
     double blind_approach_duration_ = 0.0;
@@ -141,6 +154,9 @@ private:
         double angle_increment = msg->angle_increment;
         double angle_min = msg->angle_min;
 
+        double min_dist = 999.0;
+        double min_angle = 0.0;
+
         for (int i = 0; i < num_ranges; ++i) {
             double range = msg->ranges[i];
             if (std::isnan(range) || std::isinf(range)) continue;
@@ -151,26 +167,54 @@ private:
             
             double angle_deg = angle * 180.0 / M_PI;
 
+            if (range < min_dist) {
+                min_dist = range;
+                min_angle = angle_deg;
+            }
+
             // Front cone for wandering (0.5m)
-            if (state_ == State::SEARCHING) {
+            if (state_ == State::SEARCHING || state_ == State::CHECKING_OBSTACLE || state_ == State::YIELDING) {
                 if ((angle_deg <= 45.0 || angle_deg >= 315.0) && range < 0.50) {
                     local_obstacle = true;
-                    break;
                 }
             } 
             // Narrower cone for servoing (0.3m)
-            else if (state_ == State::SERVOING || state_ == State::RECOVERY_SWEEP) {
+            else if (state_ == State::SERVOING || state_ == State::RECOVERY_SWEEP || state_ == State::PERIODIC_SWEEP) {
                 if ((angle_deg <= 30.0 || angle_deg >= 330.0) && range < 0.20) {
                     local_obstacle = true;
-                    break;
                 }
             }
         }
+        closest_obstacle_dist_ = min_dist;
+        closest_obstacle_angle_ = min_angle;
         obstacle_detected_ = local_obstacle;
     }
 
     void controlLoop() {
         if (state_ == State::SEARCHING) {
+            if ((this->now() - last_sweep_end_time_).seconds() > 30.0) {
+                RCLCPP_INFO(this->get_logger(), "[Wanderer] 30 seconds passed without a QR code. Initiating 360-degree Periodic Sweep!");
+                state_ = State::PERIODIC_SWEEP;
+                periodic_sweep_start_time_ = this->now();
+                geometry_msgs::msg::Twist twist;
+                cmd_vel_pub_->publish(twist); // Stop
+                return;
+            }
+
+            if (closest_obstacle_dist_ < 5.0 && closest_obstacle_dist_ > 0.5) {
+                if (ignore_checking_until_dist_ < 0 || closest_obstacle_dist_ > ignore_checking_until_dist_ + 0.3) {
+                    state_ = State::CHECKING_OBSTACLE;
+                    check_start_time_ = this->now();
+                    dist_at_check_ = closest_obstacle_dist_;
+                    geometry_msgs::msg::Twist twist;
+                    cmd_vel_pub_->publish(twist); // Stop
+                    RCLCPP_INFO(this->get_logger(), "[Smart Yield] Obstacle detected at %.2fm. Stopping to check if it's Bot 1...", closest_obstacle_dist_);
+                    return;
+                }
+            } else if (closest_obstacle_dist_ > 5.0) {
+                ignore_checking_until_dist_ = -1.0;
+            }
+
             geometry_msgs::msg::Twist twist;
             if (obstacle_detected_) {
                 twist.angular.z = 0.5; // Turn left to avoid
@@ -178,6 +222,42 @@ private:
                 twist.linear.x = 0.2; // Drive forward
             }
             cmd_vel_pub_->publish(twist);
+        } else if (state_ == State::CHECKING_OBSTACLE) {
+            geometry_msgs::msg::Twist twist;
+            cmd_vel_pub_->publish(twist); // Stay stopped
+            
+            double elapsed = (this->now() - check_start_time_).seconds();
+            if (elapsed > 0.5) {
+                if (closest_obstacle_dist_ < dist_at_check_ - 0.05) {
+                    RCLCPP_WARN(this->get_logger(), "[Smart Yield] Obstacle is MOVING towards us (%.2fm -> %.2fm). Yielding to Bot 1!", dist_at_check_, closest_obstacle_dist_);
+                    state_ = State::YIELDING;
+                } else {
+                    RCLCPP_INFO(this->get_logger(), "[Smart Yield] Obstacle is static. Resuming search.");
+                    state_ = State::SEARCHING;
+                    ignore_checking_until_dist_ = closest_obstacle_dist_;
+                }
+            }
+        } else if (state_ == State::YIELDING) {
+            geometry_msgs::msg::Twist twist;
+            
+            if (closest_obstacle_dist_ < 1.0) {
+                if (closest_obstacle_angle_ <= 90.0 || closest_obstacle_angle_ >= 270.0) {
+                    twist.linear.x = -0.15; // Reverse
+                    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "[Smart Yield] Bot 1 is close in front (%.2fm)! Reversing to make space...", closest_obstacle_dist_);
+                } else {
+                    twist.linear.x = 0.15; // Move forward
+                    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "[Smart Yield] Bot 1 is close behind (%.2fm)! Escaping forward...", closest_obstacle_dist_);
+                }
+            } else {
+                twist.linear.x = 0.0; // Stay stopped
+            }
+            cmd_vel_pub_->publish(twist);
+
+            if (closest_obstacle_dist_ > 4.5 && !obstacle_detected_) {
+                RCLCPP_INFO(this->get_logger(), "[Smart Yield] Path is clear. Resuming search!");
+                state_ = State::SEARCHING;
+                ignore_checking_until_dist_ = -1.0;
+            }
         } else if (state_ == State::SERVOING) {
             if (obstacle_detected_) {
                 RCLCPP_WARN(this->get_logger(), "[Servoing] Obstacle too close! Aborting to prevent crash.");
@@ -218,6 +298,20 @@ private:
                 twist.angular.z = 0.0;
                 RCLCPP_WARN(this->get_logger(), "[Recovery] 360 Sweep finished. QR code not found. Aborting.");
                 state_ = State::SEARCHING;
+                last_sweep_end_time_ = this->now();
+            }
+            cmd_vel_pub_->publish(twist);
+        } else if (state_ == State::PERIODIC_SWEEP) {
+            double elapsed = (this->now() - periodic_sweep_start_time_).seconds();
+            geometry_msgs::msg::Twist twist;
+            twist.linear.x = 0.0;
+            if (elapsed < 13.0) {
+                twist.angular.z = 0.5; // Spin Left (CCW)
+            } else {
+                twist.angular.z = 0.0;
+                RCLCPP_INFO(this->get_logger(), "[Wanderer] Periodic Sweep finished. Resuming wandering.");
+                state_ = State::SEARCHING;
+                last_sweep_end_time_ = this->now();
             }
             cmd_vel_pub_->publish(twist);
         } else if (state_ == State::BLIND_APPROACH) {
@@ -262,6 +356,7 @@ private:
             int n = scanner.scan(zbar_image);
 
             if (n > 0) {
+                last_sweep_end_time_ = this->now();
                 for (zbar::Image::SymbolIterator symbol = zbar_image.symbol_begin(); symbol != zbar_image.symbol_end(); ++symbol) {
                     std::string payload = symbol->get_data();
 
@@ -278,7 +373,7 @@ private:
                         continue; 
                     }
 
-                    if (state_ == State::SEARCHING) {
+                    if (state_ == State::SEARCHING || state_ == State::CHECKING_OBSTACLE || state_ == State::YIELDING || state_ == State::PERIODIC_SWEEP) {
                         RCLCPP_INFO(this->get_logger(), "\n=========================================");
                         RCLCPP_INFO(this->get_logger(), ">>> QR DETECTED: %s", payload.c_str());
                         RCLCPP_INFO(this->get_logger(), ">>> Preempting Wanderer and beginning Visual Servoing!");
