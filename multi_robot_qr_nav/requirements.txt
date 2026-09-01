@@ -1,0 +1,2 @@
+# Add any python dependencies here (e.g. for computer vision or machine learning)
+# They will be automatically installed in the Docker image via pip3.

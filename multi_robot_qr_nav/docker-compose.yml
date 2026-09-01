@@ -1,0 +1,55 @@
+
+services:
+  simulation:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_PACKAGES: "swarm_simulation"
+    container_name: qr_nav_simulation
+    network_mode: host
+    ipc: host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - ROS_LOCALHOST_ONLY=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: ros2 launch swarm_simulation swarm_bringup.launch.py
+
+  mapper:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_PACKAGES: "swarm_slam explore_lite_msgs explore_lite"
+    container_name: qr_nav_mapper
+    network_mode: host
+    ipc: host
+    environment:
+      - ROS_LOCALHOST_ONLY=1
+    command: ros2 launch swarm_slam auto_mapping.launch.py
+    depends_on:
+      - simulation
+
+  brain_perception:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_PACKAGES: "swarm_perception swarm_interfaces swarm_brain"
+    container_name: qr_nav_brain
+    network_mode: host
+    ipc: host
+    environment:
+      - ROS_LOCALHOST_ONLY=1
+    command: ros2 launch swarm_brain swarm_brain_perception.launch.py
+    depends_on:
+      - simulation
