@@ -1,7 +1,7 @@
 # Multi-Robot Swarm
 
 A fully asynchronous, decentralized multi-robot system using ROS 2 Jazzy and Gazebo Harmonic. In this project, an explorer robot dynamically localizes itself within a mapper robot's dynamically generated map by visually servoing to QR codes and referencing a central in-memory database.
-
+After the bot2 has successfully initialized the pose , nav2 action server activates, and then can give 2d goal poses to bot2 via Rviz
 
 ## Prerequisites
 
@@ -16,8 +16,8 @@ To run this project, you only need Docker installed on your system. All ROS 2 pa
 Clone the repository and switch to the working directory:
 ```bash
 git clone https://github.com/TalhaYasir210/robotics_development.git
-cd robotics_development/multi_robot_qr_nav
 git switch multi-bot-ai-navigation
+cd robotics_development/multi_robot_qr_nav
 ```
 
 ### 2. Allow GUI Forwarding
@@ -32,6 +32,8 @@ Because the entire architecture is fully containerized and optimized, you can bu
 ```bash
 docker compose up --build -d
 ```
+### 4. Rviz configuration
+- change /map topic to tb3_2/map , in bot2 rviz window
 
 ### 4. Monitor Logs
 If you want to view the specific logs for any container in real-time, you can use the following commands:
