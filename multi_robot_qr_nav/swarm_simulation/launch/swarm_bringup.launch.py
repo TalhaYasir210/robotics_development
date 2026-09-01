@@ -111,6 +111,7 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2',
+        namespace='tb3_1',
         arguments=['-d', rviz_config_file],
         parameters=[{'use_sim_time': True}],
         remappings=[
@@ -125,6 +126,7 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2_bot2',
+        namespace='tb3_2',
         arguments=['-d', bot2_rviz_config_file],
         parameters=[{'use_sim_time': True}],
         remappings=[

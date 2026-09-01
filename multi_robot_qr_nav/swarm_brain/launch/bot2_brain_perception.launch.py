@@ -34,7 +34,17 @@ def generate_launch_description():
         )
     )
 
+    # 3. Nav Logger for Bot 2
+    bot2_nav_logger = Node(
+        package='swarm_brain',
+        executable='nav_logger.py',
+        name='nav_logger',
+        namespace='tb3_2',
+        output='screen'
+    )
+
     return LaunchDescription([
         bot2_explorer_node,
-        bot2_navigation
+        bot2_navigation,
+        bot2_nav_logger
     ])

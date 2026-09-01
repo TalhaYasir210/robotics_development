@@ -132,7 +132,7 @@ private:
   rclcpp::Time blind_approach_start_time_;
   rclcpp::Time turn_away_start_time_;
   double blind_approach_duration_ = 0.0;
-  std::set<std::string> ignored_qrs_;
+  std::map<std::string, rclcpp::Time> ignored_qrs_;
 
   rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub_;
@@ -213,10 +213,10 @@ private:
           min_front_60 = range;
       }
 
-      // Front cone for wandering (increased detection range and angle)
+      // Front cone for wandering (reduced detection range and angle to avoid getting stuck in corridors)
       if (state_ == State::SEARCHING || state_ == State::CHECKING_OBSTACLE ||
           state_ == State::YIELDING) {
-        if ((angle_deg <= 90.0 || angle_deg >= 270.0) && range < 1.20) {
+        if ((angle_deg <= 45.0 || angle_deg >= 315.0) && range < 0.70) {
           local_obstacle = true;
         }
       }
@@ -412,7 +412,7 @@ private:
       geometry_msgs::msg::Twist twist;
       if (elapsed < 6.0) {
         twist.angular.z = 0.4; // Slower turn away
-        twist.linear.x = 0.0;
+        twist.linear.x = -0.05; // Back up slightly to un-stick from wall
       } else {
         twist.angular.z = 0.0;
         state_ = State::SEARCHING;
@@ -443,8 +443,13 @@ private:
              symbol != zbar_image.symbol_end(); ++symbol) {
           std::string payload = symbol->get_data();
 
-          if (ignored_qrs_.find(payload) != ignored_qrs_.end()) {
-            continue;
+          auto it = ignored_qrs_.find(payload);
+          if (it != ignored_qrs_.end()) {
+            if ((this->now() - it->second).seconds() < 20.0) {
+              continue;
+            } else {
+              ignored_qrs_.erase(it);
+            }
           }
 
           double center_x_check = 0;
@@ -648,10 +653,10 @@ private:
             }
           } else {
             RCLCPP_WARN(this->get_logger(),
-                        "Database does not know '%s' yet. Ignoring it and "
+                        "Database does not know '%s' yet. Ignoring for 20s and "
                         "resuming exploration.",
                         target_qr_payload_.c_str());
-            ignored_qrs_.insert(target_qr_payload_);
+            ignored_qrs_[target_qr_payload_] = this->now();
             state_ = State::TURN_AWAY;
             turn_away_start_time_ = this->now();
           }
