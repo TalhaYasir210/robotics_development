@@ -1,7 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, RegisterEventHandler
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable, RegisterEventHandler, LogInfo
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command
@@ -93,7 +93,7 @@ def generate_launch_description():
             executable='create',
             arguments=[
                 '-name', name,
-                '-topic', f'/{name}/robot_description',
+                '-string', robot_desc_command,
                 '-x', robot['x'],
                 '-y', robot['y'],
                 '-z', robot['z']
@@ -105,14 +105,7 @@ def generate_launch_description():
         spawn_actions.append(spawn_node)
         last_spawn_node = spawn_node
 
-    # Deterministically start bridge ONLY after the last robot has successfully spawned
-    bridge_event = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=last_spawn_node,
-            on_exit=[gz_bridge]
-        )
-    )
-
+    
     # 4. RViz Node for Bot 1 visualization
     rviz_node = Node(
         package='rviz2',
@@ -142,10 +135,15 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        LogInfo(msg="================================================================================"),
+        LogInfo(msg="[SWARM SIMULATION] Using direct URDF string injection (-string) for Gazebo spawn."),
+        LogInfo(msg="[SWARM SIMULATION] WARNING: If you revert to using '-topic', the bots may fail to"),
+        LogInfo(msg="[SWARM SIMULATION] spawn when ROS_LOCALHOST_ONLY=1 due to UDP packet size limits!"),
+        LogInfo(msg="================================================================================"),
         gazebo_resource_path,
         gazebo,
         *spawn_actions,
-        bridge_event,
+        gz_bridge,
         rviz_node,
         bot2_rviz_node
     ])

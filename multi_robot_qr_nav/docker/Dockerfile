@@ -20,7 +20,7 @@ COPY requirements.txt /ros2_ws/
 RUN pip3 install -r requirements.txt --break-system-packages || true
 
 # Copy only the source code
-COPY ./ /ros2_ws/src/multi_robot_qr_nav/
+COPY ./ /ros2_ws/src/robotics_development/multi_robot_qr_nav/
 
 # Install ROS dependencies using rosdep
 RUN rosdep update && \
@@ -29,9 +29,9 @@ RUN rosdep update && \
 # ARG to specify which packages to build for this specific container
 ARG BUILD_PACKAGES=""
 RUN if [ -n "$BUILD_PACKAGES" ]; then \
-        bash -c "source /opt/ros/jazzy/setup.bash && colcon build --packages-up-to $BUILD_PACKAGES"; \
+    bash -c "source /opt/ros/jazzy/setup.bash && colcon build --packages-up-to $BUILD_PACKAGES"; \
     else \
-        bash -c "source /opt/ros/jazzy/setup.bash && colcon build"; \
+    bash -c "source /opt/ros/jazzy/setup.bash && colcon build"; \
     fi
 
 # Copy entrypoint script

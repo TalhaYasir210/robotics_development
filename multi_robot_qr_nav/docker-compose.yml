@@ -12,6 +12,7 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
+      - ROS_LOCALHOST_ONLY=1
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     deploy:
@@ -32,6 +33,8 @@ services:
     container_name: qr_nav_mapper
     network_mode: host
     ipc: host
+    environment:
+      - ROS_LOCALHOST_ONLY=1
     command: ros2 launch swarm_slam auto_mapping.launch.py
     depends_on:
       - simulation
@@ -45,6 +48,8 @@ services:
     container_name: qr_nav_brain
     network_mode: host
     ipc: host
+    environment:
+      - ROS_LOCALHOST_ONLY=1
     command: ros2 launch swarm_brain swarm_brain_perception.launch.py
     depends_on:
       - simulation
