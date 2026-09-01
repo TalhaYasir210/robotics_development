@@ -62,7 +62,7 @@ docker compose down
 * **Bot 2 (The Explorer):** It starts completely blind without any map and begins wandering the environment. It uses a custom obstacle avoidance and yielding algorithm to avoid static walls and smartly yield/escape if it detects the dynamic Bot 1 approaching it.
 * **Solving the Lost Robot Problem:** While wandering, if Bot 2 visually spots a QR code through its camera, it enters a visual servoing state to align with it. It then queries the central database to check if Bot 1 has already mapped that specific QR code. If the database returns the coordinates, Bot 2 calculates the inverse kinematics to perfectly localize its exact position and orientation within Bot 1's map frame.
 * **Dynamic Map Synchronization:** Once localized, Bot 2 requests the actual generated map from the database and initializes its own Nav2 stack. From that point on, it operates as a fully localized robot navigating inside the dynamically updated map provided by Bot 1.
-* Interactive RViz Navigation: With the map fully synchronized and Bot 2's initial pose accurately locked in, the system unlocks operator control. You can now use the "2D Goal Pose" tool directly in RViz to issue target destinations to Bot 2, allowing it to leverage its newly initialized Nav2 stack to autonomously plan and execute complex paths through the shared environment.
+* **Interactive RViz Navigation:**  With the map fully synchronized and Bot 2's initial pose accurately locked in, the system unlocks operator control. You can now use the "2D Goal Pose" tool directly in RViz to issue target destinations to Bot 2, allowing it to leverage its newly initialized Nav2 stack to autonomously plan and execute complex paths through the shared environment.
 
 
 
