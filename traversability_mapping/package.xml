@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  Package Manifest: package.xml
+  Purpose: Defines package metadata, build tools (ament_cmake, eigen3_cmake_module),
+  runtime dependencies (rclcpp, sensor_msgs, nav_msgs, tf2), and test dependencies
+  for the traversability_mapping ROS 2 Jazzy package.
+-->
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>traversability_mapping</name>
+  <version>0.1.0</version>
+  <description>Production-grade modular 2.5D elevation and traversability mapping package for simulated TurtleBot3 with RealSense depth camera in ROS 2 Jazzy.</description>
+  <maintainer email="user@todo.todo">ROS 2 Developer</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>eigen3_cmake_module</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_eigen</depend>
+  <depend>eigen</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

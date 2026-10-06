@@ -213,10 +213,10 @@ private:
           min_front_60 = range;
       }
 
-      // Front cone for wandering (reduced detection range and angle to avoid getting stuck in corridors)
+      // Front cone for wandering (increased detection range and angle)
       if (state_ == State::SEARCHING || state_ == State::CHECKING_OBSTACLE ||
           state_ == State::YIELDING) {
-        if ((angle_deg <= 45.0 || angle_deg >= 315.0) && range < 0.70) {
+        if ((angle_deg <= 90.0 || angle_deg >= 270.0) && range < 1.20) {
           local_obstacle = true;
         }
       }

@@ -1,0 +1,22 @@
+# ==============================================================================
+# Traversability Mapping Node Configuration Parameters
+# ==============================================================================
+# This configuration file defines grid map dimensions, resolution, step-height
+# classification thresholds, point cloud filtering ranges, coordinate frames,
+# and ROS 2 topic names for the traversability_node.
+# ==============================================================================
+
+/**:
+  ros__parameters:
+    resolution: 0.05           # 5 cm per cell (resolution in meters)
+    grid_width: 4.0            # 4 meters lateral coverage (-2.0m to +2.0m)
+    grid_length: 4.0           # 4 meters forward coverage (0.0m to +4.0m)
+    safe_step_threshold: 0.06  # < 6 cm delta-z is considered flat, navigable ground
+    obstacle_threshold: 0.12   # > 12 cm delta-z is classified as an obstacle / impassable step
+    min_z_cutoff: -0.15        # Floor noise filter threshold in base_link frame
+    max_z_cutoff: 1.50         # Ceiling and overhang filter threshold in base_link frame
+    min_x_cutoff: 0.20         # Reject points inside robot chassis footprint (< 20 cm)
+    max_range: 4.5             # Maximum forward depth camera range (meters)
+    base_frame: "base_link"    # Robot reference coordinate frame
+    input_topic: "/camera/depth/points"  # Subscribed sensor_msgs/PointCloud2 topic
+    output_topic: "/traversability_map"  # Published nav_msgs/OccupancyGrid topic
