@@ -5,7 +5,14 @@ A modular, production-grade 2.5D elevation and traversability mapping ROS 2 Jazz
 ---
 
 ##  Installation & Build Instructions
-
+> **Note:**  make a directory , change the directory and clone the repository
+```bash
+git clone https://github.com/TalhaYasir210/robotics_development.git
+```
+> **Note:**  after cloning change the branch
+```bash
+git switch traversability_with_depth_camera
+```
 > **Note:**  always build from the root of your ROS 2 workspace 
 
 ### 1. Install Dependencies
@@ -51,6 +58,24 @@ ros2 launch traversability_mapping tb3_simulation.launch.py
 source install/setup.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
+
+
+
+
+
+
+https://github.com/user-attachments/assets/54e46442-f8cc-40d2-9a81-44c98fcf9ac4
+
+
+
+
+
+https://github.com/user-attachments/assets/dee9b5fd-6465-4045-943f-9002fcc825e2
+
+
+
+
+
 
 ### Option B: Standalone Node (with existing simulation or real robot)
 ```bash
