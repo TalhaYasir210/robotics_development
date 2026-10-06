@@ -14,7 +14,9 @@ git clone https://github.com/TalhaYasir210/robotics_development.git
 ```
 > **Note:**  after cloning change the branch
 ```bash
+cd <robotics development>
 git switch traversability_with_depth_camera
+cd ..
 ```
 > **Note:**  always build from the root of your ROS 2 workspace 
 
