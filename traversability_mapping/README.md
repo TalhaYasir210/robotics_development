@@ -80,22 +80,6 @@ https://github.com/user-attachments/assets/dee9b5fd-6465-4045-943f-9002fcc825e2
 
 
 
-
-
-### Option B: Standalone Node (with existing simulation or real robot)
-```bash
-ros2 launch traversability_mapping traversability.launch.py
-```
-
-### Option C: Standalone Executable with Custom Parameters
-```bash
-ros2 run traversability_mapping traversability_node --ros-args \
-  -p resolution:=0.05 \
-  -p grid_width:=4.0 \
-  -p grid_length:=4.0 \
-  -p safe_step_threshold:=0.06 \
-  -p obstacle_threshold:=0.12
-```
 ---
 ## Configuration Parameters (`config/params.yaml`)
 
