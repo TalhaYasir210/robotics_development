@@ -2,6 +2,9 @@
 
 A modular, production-grade 2.5D elevation and traversability mapping ROS 2 Jazzy C++ package designed for simulated and physical mobile robots (TurtleBot3 Waffle / Waffle Pi) equipped with an Intel RealSense depth camera.
 
+<img width="19340" height="2820" alt="traversability depth camera" src="https://github.com/user-attachments/assets/2fa17119-c3fa-4219-bcd1-c21ee8e3545f" />
+
+
 ---
 
 ##  Installation & Build Instructions
