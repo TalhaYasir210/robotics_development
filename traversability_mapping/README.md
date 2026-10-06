@@ -30,7 +30,7 @@ rosdep install --from-paths src --ignore-src -r -y
 
 # (Optional) Install Python tooling dependencies
 cd <robotics_development> 
-pip install -r traversability_mapping/requirements.txt
+pip install -r traversability_mapping/requirements.txt --break-system-packages
 ```
 
 ### Build the Package
