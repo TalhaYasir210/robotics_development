@@ -63,7 +63,7 @@ ros2 run traversability_mapping traversability_node --ros-args \
   -p resolution:=0.05 \
   -p grid_width:=4.0 \
   -p grid_length:=4.0 \
-  -p safe_step_threshold:=0.04 \
+  -p safe_step_threshold:=0.06 \
   -p obstacle_threshold:=0.12
 ```
 ---
@@ -74,7 +74,7 @@ ros2 run traversability_mapping traversability_node --ros-args \
 | `resolution` | float | `0.05` | Grid cell size (5 cm per cell) |
 | `grid_width` | float | `4.0` | Lateral coverage in meters (-2.0m to +2.0m) |
 | `grid_length` | float | `4.0` | Forward coverage in meters (0.0m to +4.0m) |
-| `safe_step_threshold` | float | `0.04` | Height delta $\le 4\text{cm}$ is classified as flat ground (cost 0) |
+| `safe_step_threshold` | float | `0.06` | Height delta $\le 6\text{cm}$ is classified as flat ground (cost 0) |
 | `obstacle_threshold` | float | `0.12` | Height delta $\ge 12\text{cm}$ is non-traversable (cost 100) |
 | `min_z_cutoff` | float | `-0.15` | Floor noise filter cutoff in `base_link` frame |
 | `max_z_cutoff` | float | `1.50` | Ceiling / overhang filter cutoff in `base_link` frame |
