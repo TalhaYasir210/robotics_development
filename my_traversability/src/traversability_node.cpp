@@ -66,6 +66,7 @@ void TraversabilityNode::declareAndInitializeParameters()
   this->declare_parameter<float>("obstacle_threshold", obstacle_threshold_);
   this->declare_parameter<float>("min_z_cutoff", min_z_cutoff_);
   this->declare_parameter<float>("max_z_cutoff", max_z_cutoff_);
+  this->declare_parameter<bool>("enable_profiling", enable_profiling_);
 
   target_frame_ = this->get_parameter("target_frame").as_string();
   pointcloud_topic_ = this->get_parameter("pointcloud_topic").as_string();
@@ -78,6 +79,7 @@ void TraversabilityNode::declareAndInitializeParameters()
   obstacle_threshold_ = static_cast<float>(this->get_parameter("obstacle_threshold").as_double());
   min_z_cutoff_ = static_cast<float>(this->get_parameter("min_z_cutoff").as_double());
   max_z_cutoff_ = static_cast<float>(this->get_parameter("max_z_cutoff").as_double());
+  enable_profiling_ = this->get_parameter("enable_profiling").as_bool();
 }
 
 rcl_interfaces::msg::SetParametersResult TraversabilityNode::onParameterChange(
@@ -118,6 +120,11 @@ rcl_interfaces::msg::SetParametersResult TraversabilityNode::onParameterChange(
       resolution_ = new_res;
       rebuild_needed = true;
       RCLCPP_INFO(this->get_logger(), "Runtime update: resolution = %.3f", resolution_);
+    } else if (name == "enable_profiling") {
+      enable_profiling_ = param.as_bool();
+      RCLCPP_INFO(
+        this->get_logger(), "Runtime update: enable_profiling = %s",
+        enable_profiling_ ? "true" : "false");
     }
   }
 
@@ -139,7 +146,10 @@ rcl_interfaces::msg::SetParametersResult TraversabilityNode::onParameterChange(
 
 void TraversabilityNode::pointCloudCallback(const sensor_msgs::msg::PointCloud2::ConstSharedPtr & msg)
 {
+  const auto t_frame_start = std::chrono::steady_clock::now();
+
   // 1. Look up transform from Camera Frame -> Robot Base Frame
+  const auto t_tf_start = std::chrono::steady_clock::now();
   geometry_msgs::msg::TransformStamped tf_stamped;
   try {
     tf_stamped = tf_buffer_->lookupTransform(
@@ -157,6 +167,7 @@ void TraversabilityNode::pointCloudCallback(const sensor_msgs::msg::PointCloud2:
 
   // Convert ROS transform to Eigen Isometry3f (single 4x4 matrix representation)
   const Eigen::Isometry3f sensor_to_base = tf2::transformToEigen(tf_stamped).cast<float>();
+  const auto t_tf_end = std::chrono::steady_clock::now();
 
   // 2. Wipe grid buffers in place (zero-allocation)
   grid_map_->reset();
@@ -185,6 +196,7 @@ void TraversabilityNode::pointCloudCallback(const sensor_msgs::msg::PointCloud2:
   }
 
   // 4. Fast Direct Pointer Arithmetic Parsing (Zero-Heap Ingestion)
+  const auto t_ingest_start = std::chrono::steady_clock::now();
   const uint8_t * raw_ptr = msg->data.data();
   const uint32_t point_step = msg->point_step;
   const size_t total_points = static_cast<size_t>(msg->width * msg->height);
@@ -213,12 +225,60 @@ void TraversabilityNode::pointCloudCallback(const sensor_msgs::msg::PointCloud2:
       grid_map_->addPoint(out_x, out_y, out_z);
     }
   }
+  const auto t_ingest_end = std::chrono::steady_clock::now();
 
-  // 4. Evaluate Delta-Z and determine traversability cost per cell
+  // 5. Evaluate Delta-Z and determine traversability cost per cell
+  const auto t_compute_start = std::chrono::steady_clock::now();
   grid_map_->computeTraversability();
+  const auto t_compute_end = std::chrono::steady_clock::now();
 
-  // 5. Construct and publish standard Nav2 OccupancyGrid
+  // 6. Construct and publish standard Nav2 OccupancyGrid
+  const auto t_pub_start = std::chrono::steady_clock::now();
   publishOccupancyGrid(msg->header);
+  const auto t_pub_end = std::chrono::steady_clock::now();
+
+  const auto t_frame_end = std::chrono::steady_clock::now();
+
+  // 7. High-Resolution Latency & Profiling Bookkeeping (Issue 10)
+  if (enable_profiling_) {
+    const double tf_ms =
+      std::chrono::duration<double, std::milli>(t_tf_end - t_tf_start).count();
+    const double ingest_ms =
+      std::chrono::duration<double, std::milli>(t_ingest_end - t_ingest_start).count();
+    const double compute_ms =
+      std::chrono::duration<double, std::milli>(t_compute_end - t_compute_start).count();
+    const double pub_ms =
+      std::chrono::duration<double, std::milli>(t_pub_end - t_pub_start).count();
+    const double total_ms =
+      std::chrono::duration<double, std::milli>(t_frame_end - t_frame_start).count();
+
+    frame_count_++;
+    total_latency_ms_ += total_ms;
+    min_latency_ms_ = std::min(min_latency_ms_, total_ms);
+    max_latency_ms_ = std::max(max_latency_ms_, total_ms);
+
+    cumulative_tf_ms_ += tf_ms;
+    cumulative_ingest_ms_ += ingest_ms;
+    cumulative_compute_ms_ += compute_ms;
+    cumulative_publish_ms_ += pub_ms;
+
+    // Report periodic statistical summary every 100 frames
+    if (frame_count_ % 100 == 0) {
+      const double avg_total = total_latency_ms_ / static_cast<double>(frame_count_);
+      const double avg_tf = cumulative_tf_ms_ / static_cast<double>(frame_count_);
+      const double avg_ingest = cumulative_ingest_ms_ / static_cast<double>(frame_count_);
+      const double avg_compute = cumulative_compute_ms_ / static_cast<double>(frame_count_);
+      const double avg_pub = cumulative_publish_ms_ / static_cast<double>(frame_count_);
+      const double est_fps = (avg_total > 0.0) ? (1000.0 / avg_total) : 0.0;
+
+      RCLCPP_INFO(
+        this->get_logger(),
+        "[Profiling] Frames: %lu | Cur: %.2f ms (Avg: %.2f ms, Min: %.2f ms, Max: %.2f ms) | "
+        "TF: %.2f ms | Ingest: %.2f ms | Compute: %.2f ms | Pub: %.2f ms | Max Capacity: %.0f Hz (Budget: 33.3 ms)",
+        frame_count_, total_ms, avg_total, min_latency_ms_, max_latency_ms_,
+        avg_tf, avg_ingest, avg_compute, avg_pub, est_fps);
+    }
+  }
 }
 
 void TraversabilityNode::initializeOccupancyGridMessage()

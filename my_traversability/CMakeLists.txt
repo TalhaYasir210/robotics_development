@@ -2,11 +2,18 @@ cmake_minimum_required(VERSION 3.8)
 project(my_traversability)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -O3)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Sanitizer options for memory leak & bounds profiling
+option(ENABLE_SANITIZERS "Enable AddressSanitizer and LeakSanitizer" OFF)
+if(ENABLE_SANITIZERS)
+  add_compile_options(-fsanitize=address -fsanitize=leak -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address -fsanitize=leak)
+endif()
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
@@ -73,6 +80,11 @@ if(BUILD_TESTING)
   ament_add_gtest(test_traversability_node test/test_traversability_node.cpp)
   target_include_directories(test_traversability_node PRIVATE include)
   target_link_libraries(test_traversability_node my_traversability_core)
+
+  # Latency & CPU Profiling Benchmark (Issue 10)
+  ament_add_gtest(benchmark_traversability test/benchmark_traversability.cpp)
+  target_include_directories(benchmark_traversability PRIVATE include)
+  target_link_libraries(benchmark_traversability my_traversability_core)
 endif()
 
 # 4. Install rules for ROS 2 deployment

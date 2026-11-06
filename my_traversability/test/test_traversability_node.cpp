@@ -52,5 +52,30 @@ TEST_F(TraversabilityNodeTest, HandlesRuntimeParameterChanges)
   EXPECT_FALSE(invalid_result.successful);
 }
 
+// 3. Verify profiling parameter and statistics queries (Issue 10)
+TEST_F(TraversabilityNodeTest, ProfilingParametersAndState)
+{
+  auto node = std::make_shared<TraversabilityNode>();
+
+  EXPECT_TRUE(node->has_parameter("enable_profiling"));
+  EXPECT_TRUE(node->get_parameter("enable_profiling").as_bool());
+  EXPECT_TRUE(node->isProfilingEnabled());
+
+  EXPECT_EQ(node->getFrameCount(), 0U);
+  EXPECT_DOUBLE_EQ(node->getAverageLatencyMs(), 0.0);
+  EXPECT_DOUBLE_EQ(node->getMinLatencyMs(), 0.0);
+  EXPECT_DOUBLE_EQ(node->getMaxLatencyMs(), 0.0);
+
+  // Toggle profiling parameter dynamically at runtime
+  auto result = node->set_parameter(rclcpp::Parameter("enable_profiling", false));
+  EXPECT_TRUE(result.successful);
+  EXPECT_FALSE(node->get_parameter("enable_profiling").as_bool());
+  EXPECT_FALSE(node->isProfilingEnabled());
+
+  // Reset stats verification
+  node->resetProfilingStats();
+  EXPECT_EQ(node->getFrameCount(), 0U);
+}
+
 }  // namespace my_traversability
 
