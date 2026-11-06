@@ -4,6 +4,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import AppendEnvironmentVariable, DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -18,10 +19,18 @@ def generate_launch_description():
 
     # Path to our self-contained house world (no roof, with rooms, poles, and test obstacles)
     world = os.path.join(pkg_traversability, 'worlds', 'house_world.world')
+    rviz_config_file = os.path.join(pkg_traversability, 'rviz', 'traversability_view.rviz')
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    use_rviz = LaunchConfiguration('use_rviz', default='true')
     x_pose = LaunchConfiguration('x_pose', default='0.0')
     y_pose = LaunchConfiguration('y_pose', default='0.0')
+
+    declare_use_rviz_cmd = DeclareLaunchArgument(
+        'use_rviz',
+        default_value='true',
+        description='Whether to start RViz2'
+    )
 
     # 1. Gazebo Harmonic Physics Server
     gzserver_cmd = IncludeLaunchDescription(
@@ -94,6 +103,17 @@ def generate_launch_description():
         }]
     )
 
+    # 7. Launch RViz2 Visualization
+    rviz_cmd = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_config_file],
+        parameters=[{'use_sim_time': use_sim_time}],
+        condition=IfCondition(use_rviz),
+        output='screen'
+    )
+
     # Resource paths for TurtleBot3 robot models & local models
     set_env_resources = AppendEnvironmentVariable(
         'GZ_SIM_RESOURCE_PATH',
@@ -103,10 +123,12 @@ def generate_launch_description():
     return LaunchDescription([
         set_tb3_model,
         set_env_resources,
+        declare_use_rviz_cmd,
         gzserver_cmd,
         gzclient_cmd,
         robot_state_publisher_cmd,
         spawn_turtlebot_cmd,
         bridge_clock_points,
-        traversability_node
+        traversability_node,
+        rviz_cmd
     ])

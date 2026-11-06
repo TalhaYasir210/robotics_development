@@ -88,7 +88,7 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-install(DIRECTORY launch worlds models
+install(DIRECTORY launch worlds models rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
