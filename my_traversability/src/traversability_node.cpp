@@ -1,7 +1,7 @@
 #include "my_traversability/traversability_node.hpp"
 #include "my_traversability/cloud_filter.hpp"
 
-#include <sensor_msgs/point_cloud2_iterator.hpp>
+#include <cstring>
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <tf2/exceptions.h>
 
@@ -157,20 +157,52 @@ void TraversabilityNode::pointCloudCallback(const sensor_msgs::msg::PointCloud2:
   // 2. Wipe grid buffers in place (zero-allocation)
   grid_map_->reset();
 
-  // 3. Fast Zero-Copy PointCloud2 Iterator
-  sensor_msgs::PointCloud2ConstIterator<float> iter_x(*msg, "x");
-  sensor_msgs::PointCloud2ConstIterator<float> iter_y(*msg, "y");
-  sensor_msgs::PointCloud2ConstIterator<float> iter_z(*msg, "z");
+  // 3. Extract byte offsets for x, y, and z fields from PointCloud2 metadata
+  int offset_x = -1;
+  int offset_y = -1;
+  int offset_z = -1;
 
+  for (const auto & field : msg->fields) {
+    if (field.name == "x") {
+      offset_x = static_cast<int>(field.offset);
+    } else if (field.name == "y") {
+      offset_y = static_cast<int>(field.offset);
+    } else if (field.name == "z") {
+      offset_z = static_cast<int>(field.offset);
+    }
+  }
+
+  // Safety guard: skip frame if XYZ channels are missing
+  if (offset_x < 0 || offset_y < 0 || offset_z < 0) {
+    RCLCPP_WARN_THROTTLE(
+      this->get_logger(), *this->get_clock(), 2000,
+      "PointCloud2 is missing essential 'x', 'y', or 'z' field offsets.");
+    return;
+  }
+
+  // 4. Fast Direct Pointer Arithmetic Parsing (Zero-Heap Ingestion)
+  const uint8_t * raw_ptr = msg->data.data();
+  const uint32_t point_step = msg->point_step;
+  const size_t total_points = static_cast<size_t>(msg->width * msg->height);
+  const uint8_t * const raw_ptr_end = raw_ptr + (total_points * point_step);
+
+  float in_x = 0.0f;
+  float in_y = 0.0f;
+  float in_z = 0.0f;
   float out_x = 0.0f;
   float out_y = 0.0f;
   float out_z = 0.0f;
 
-  for (; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z) {
-    // Check NaN/Inf and transform into base frame
+  for (; raw_ptr < raw_ptr_end; raw_ptr += point_step) {
+    // Standard-compliant, alignment-safe float read (compiles to single movss instruction)
+    std::memcpy(&in_x, raw_ptr + offset_x, sizeof(float));
+    std::memcpy(&in_y, raw_ptr + offset_y, sizeof(float));
+    std::memcpy(&in_z, raw_ptr + offset_z, sizeof(float));
+
+    // Check validity, transform coordinates into base_link, and filter bounds
     if (CloudFilter::filterAndTransform(
         sensor_to_base,
-        *iter_x, *iter_y, *iter_z,
+        in_x, in_y, in_z,
         out_x, out_y, out_z,
         min_z_cutoff_, max_z_cutoff_))
     {
