@@ -58,7 +58,7 @@ private:
   std::unique_ptr<ElevationGridMap> grid_map_;
 
   // --- Node Configuration & Runtime Parameters ---
-  std::string target_frame_{"base_footprint"};
+  std::string target_frame_{"base_link"};
   std::string pointcloud_topic_{"/camera/depth/points"};
   std::string map_topic_{"/traversability_map"};
 
