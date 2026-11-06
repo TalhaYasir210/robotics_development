@@ -33,7 +33,7 @@ TEST_F(TraversabilityNodeTest, DeclaresDefaultParameters)
   EXPECT_NEAR(node->get_parameter("grid_width").as_double(), 4.0, 1e-4);
   EXPECT_NEAR(node->get_parameter("grid_length").as_double(), 4.0, 1e-4);
   EXPECT_NEAR(node->get_parameter("resolution").as_double(), 0.05, 1e-4);
-  EXPECT_EQ(node->get_parameter("target_frame").as_string(), "base_footprint");
+  EXPECT_EQ(node->get_parameter("target_frame").as_string(), "base_link");
   EXPECT_EQ(node->get_parameter("pointcloud_topic").as_string(), "/camera/depth/points");
 }
 
