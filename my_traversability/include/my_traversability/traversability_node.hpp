@@ -1,6 +1,9 @@
 #ifndef MY_TRAVERSABILITY_TRAVERSABILITY_NODE_HPP_
 #define MY_TRAVERSABILITY_TRAVERSABILITY_NODE_HPP_
 
+#include <chrono>
+#include <algorithm>
+#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,6 +33,26 @@ public:
   TraversabilityNode & operator=(const TraversabilityNode &) = delete;
   TraversabilityNode(TraversabilityNode &&) = delete;
   TraversabilityNode & operator=(TraversabilityNode &&) = delete;
+
+  // --- Real-Time Latency & Profiling Queries (Issue 10) ---
+  bool isProfilingEnabled() const noexcept { return enable_profiling_; }
+  uint64_t getFrameCount() const noexcept { return frame_count_; }
+  double getAverageLatencyMs() const noexcept {
+    return frame_count_ > 0 ? (total_latency_ms_ / static_cast<double>(frame_count_)) : 0.0;
+  }
+  double getMinLatencyMs() const noexcept { return frame_count_ > 0 ? min_latency_ms_ : 0.0; }
+  double getMaxLatencyMs() const noexcept { return max_latency_ms_; }
+  void resetProfilingStats() noexcept
+  {
+    frame_count_ = 0;
+    total_latency_ms_ = 0.0;
+    min_latency_ms_ = std::numeric_limits<double>::max();
+    max_latency_ms_ = 0.0;
+    cumulative_tf_ms_ = 0.0;
+    cumulative_ingest_ms_ = 0.0;
+    cumulative_compute_ms_ = 0.0;
+    cumulative_publish_ms_ = 0.0;
+  }
 
 private:
   // --- Perception Pipeline Callbacks ---
@@ -74,6 +97,19 @@ private:
   float obstacle_threshold_{0.12f};
   float min_z_cutoff_{-0.15f};
   float max_z_cutoff_{1.05f};
+
+  // --- Real-Time Latency & CPU Profiling State (Issue 10) ---
+  bool enable_profiling_{true};
+  uint64_t frame_count_{0};
+  double total_latency_ms_{0.0};
+  double min_latency_ms_{std::numeric_limits<double>::max()};
+  double max_latency_ms_{0.0};
+
+  // Cumulative breakdown across pipeline stages
+  double cumulative_tf_ms_{0.0};
+  double cumulative_ingest_ms_{0.0};
+  double cumulative_compute_ms_{0.0};
+  double cumulative_publish_ms_{0.0};
 };
 
 }  // namespace my_traversability
