@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="default">
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <sor>1.4</sor>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- Essential Gazebo Harmonic System Plugins -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+
+    <!-- High-Ambient Lighting -->
+    <scene>
+      <ambient>0.85 0.85 0.85 1.0</ambient>
+      <background>0.75 0.75 0.85 1.0</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <!-- GUI Camera pointing directly at center (0, 0) where robot spawns -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>-3.0 -2.5 3.5 0 0.7 0.7</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+    <!-- Flat Ground Floor -->
+    <model name="ground_floor">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== Enclosed House Structure (No Roof) ==================== -->
+    <model name="house_walls">
+      <static>true</static>
+      <!-- Perimeter Outer Walls (7m x 7m x 1m height) -->
+      <link name="outer_wall_n">
+        <pose>0 3.5 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>7.2 0.2 1.0</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>7.2 0.2 1.0</size></box></geometry><material><ambient>0.3 0.35 0.45 1</ambient><diffuse>0.3 0.35 0.45 1</diffuse></material></visual>
+      </link>
+      <link name="outer_wall_s">
+        <pose>0 -3.5 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>7.2 0.2 1.0</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>7.2 0.2 1.0</size></box></geometry><material><ambient>0.3 0.35 0.45 1</ambient><diffuse>0.3 0.35 0.45 1</diffuse></material></visual>
+      </link>
+      <link name="outer_wall_e">
+        <pose>3.5 0 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.2 7.2 1.0</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 7.2 1.0</size></box></geometry><material><ambient>0.3 0.35 0.45 1</ambient><diffuse>0.3 0.35 0.45 1</diffuse></material></visual>
+      </link>
+      <link name="outer_wall_w">
+        <pose>-3.5 0 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.2 7.2 1.0</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.2 7.2 1.0</size></box></geometry><material><ambient>0.3 0.35 0.45 1</ambient><diffuse>0.3 0.35 0.45 1</diffuse></material></visual>
+      </link>
+
+      <!-- Room Partition Walls -->
+      <link name="room_wall_1">
+        <pose>-1.5 2.2 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>3.8 0.2 1.0</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>3.8 0.2 1.0</size></box></geometry><material><ambient>0.4 0.45 0.55 1</ambient><diffuse>0.4 0.45 0.55 1</diffuse></material></visual>
+      </link>
+      <link name="room_wall_2">
+        <pose>-1.5 -2.2 0.5 0 0 0</pose>
+        <collision name="c"><geometry><box><size>3.8 0.2 1.0</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>3.8 0.2 1.0</size></box></geometry><material><ambient>0.4 0.45 0.55 1</ambient><diffuse>0.4 0.45 0.55 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- ==================== Interior Obstacle Poles / Pillars ==================== -->
+    <model name="interior_pillars">
+      <static>true</static>
+      <link name="pillar_left">
+        <pose>-1.0 1.0 0.5 0 0 0</pose>
+        <collision name="c"><geometry><cylinder><radius>0.15</radius><length>1.0</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.15</radius><length>1.0</length></cylinder></geometry><material><ambient>0.2 0.5 0.8 1</ambient><diffuse>0.2 0.5 0.8 1</diffuse></material></visual>
+      </link>
+      <link name="pillar_right">
+        <pose>-1.0 -1.0 0.5 0 0 0</pose>
+        <collision name="c"><geometry><cylinder><radius>0.15</radius><length>1.0</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.15</radius><length>1.0</length></cylinder></geometry><material><ambient>0.2 0.5 0.8 1</ambient><diffuse>0.2 0.5 0.8 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- ==================== Perception Test Obstacles (Dead Center in Front of Robot) ==================== -->
+    <!-- Robot spawns at (0.0, 0.0) facing +X. Obstacles are placed 1.8m ahead at X = 1.8 -->
+
+    <!-- Obstacle 1: 4 cm Step (Safe floor step <= 0.06m -> Classifies as Cost 0 Safe) -->
+    <model name="safe_step_4cm">
+      <static>true</static>
+      <pose>1.8 -0.7 0.02 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.5 0.04</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.5 0.04</size></box></geometry>
+          <material><ambient>0.1 0.8 0.2 1</ambient><diffuse>0.1 0.8 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Obstacle 2: 8 cm Slope / Ramp (Risky step between 0.06m and 0.12m -> Classifies as Cost 1-99) -->
+    <model name="risky_slope_8cm">
+      <static>true</static>
+      <pose>1.8 0.0 0.04 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.5 0.08</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.5 0.08</size></box></geometry>
+          <material><ambient>0.9 0.8 0.1 1</ambient><diffuse>0.9 0.8 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Obstacle 3: 15 cm Box (Lethal obstacle >= 0.12m -> Classifies as Cost 100 Blocked) -->
+    <model name="blocked_box_15cm">
+      <static>true</static>
+      <pose>1.8 0.7 0.075 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><box><size>0.6 0.5 0.15</size></box></geometry></collision>
+        <visual name="v">
+          <geometry><box><size>0.6 0.5 0.15</size></box></geometry>
+          <material><ambient>0.9 0.1 0.1 1</ambient><diffuse>0.9 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

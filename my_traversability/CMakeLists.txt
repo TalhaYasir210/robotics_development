@@ -88,6 +88,10 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
+install(DIRECTORY launch worlds models
+  DESTINATION share/${PROJECT_NAME}
+)
+
 # Export library for external downstream nodes
 ament_export_include_directories(include)
 ament_export_libraries(my_traversability_core)
