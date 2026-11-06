@@ -11,6 +11,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
 
 #include <tf2_ros/buffer.h>
@@ -66,10 +67,12 @@ private:
   void declareAndInitializeParameters();
   void initializeOccupancyGridMessage();
   void publishOccupancyGrid(const std_msgs::msg::Header & header);
+  void publishTraversabilityMarkers(const std_msgs::msg::Header & header);
 
   // --- ROS 2 Interfaces ---
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_sub_;
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_grid_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
 
   // --- Pre-allocated Message Buffer (Zero Heap Allocation at Runtime) ---
   nav_msgs::msg::OccupancyGrid occupancy_grid_msg_;
@@ -88,6 +91,7 @@ private:
   std::string target_frame_{"base_link"};
   std::string pointcloud_topic_{"/camera/depth/points"};
   std::string map_topic_{"/traversability_map"};
+  std::string marker_topic_{"/traversability_markers"};
 
   // Grid Extents & Step Thresholds
   float grid_width_{4.0f};

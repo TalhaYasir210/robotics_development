@@ -20,9 +20,11 @@ private:
     float resolution_{0.05f};      // Cell size in meters (5 cm)
     float half_width_{2.0f};
 
-    // Discrete grid geometry
-    int rows_{0};                  // Discretized along X
-    int cols_{0};                  // Discretized along Y
+    // Discrete grid geometry aligned with ROS OccupancyGrid standard:
+    // width_x_  = cells along X-axis (forward)
+    // height_y_ = cells along Y-axis (lateral)
+    int width_x_{0};
+    int height_y_{0};
     size_t total_cells_{0};
 
     // Traversability metric thresholds (meters)
@@ -64,34 +66,44 @@ public:
     bool addPoint(float x, float y, float z) noexcept;
     void computeTraversability() noexcept;
 
-    // Index & Coordinate Helpers
-    inline size_t toIndex(int row, int col) const noexcept
+    // Index & Coordinate Helpers (Standard ROS OccupancyGrid Row-Major: index = iy * width_x + ix)
+    inline size_t toIndex(int ix, int iy) const noexcept
     {
-        return static_cast<size_t>(row * cols_ + col);
+        return static_cast<size_t>(iy * width_x_ + ix);
     }
 
-    inline bool toGridCoordinates(float x, float y, int & row, int & col) const noexcept
+    inline bool toGridCoordinates(float x, float y, int & ix, int & iy) const noexcept
     {
-        // X maps to forward rows [0, grid_length_]
+        // X maps to forward cells [0, grid_length_]
         if (x < 0.0f || x >= grid_length_) {
             return false;
         }
 
-        // Y maps to lateral cols [-half_width_, +half_width_]
+        // Y maps to lateral cells [-half_width_, +half_width_]
         if (y < -half_width_ || y >= half_width_) {
             return false;
         }
 
-        row = static_cast<int>(x / resolution_);
-        col = static_cast<int>((y + half_width_) / resolution_);
+        ix = static_cast<int>(x / resolution_);
+        iy = static_cast<int>((y + half_width_) / resolution_);
 
-        return (row >= 0 && row < rows_ && col >= 0 && col < cols_);
+        return (ix >= 0 && ix < width_x_ && iy >= 0 && iy < height_y_);
+    }
+
+    inline void getCellCenter(size_t index, float & x, float & y) const noexcept
+    {
+        const int ix = static_cast<int>(index % static_cast<size_t>(width_x_));
+        const int iy = static_cast<int>(index / static_cast<size_t>(width_x_));
+        x = (static_cast<float>(ix) + 0.5f) * resolution_;
+        y = -half_width_ + (static_cast<float>(iy) + 0.5f) * resolution_;
     }
 
     // Getters for ROS Node Publishing and Testing
     inline bool isInitialized() const noexcept { return initialized_; }
-    inline int getRows() const noexcept { return rows_; }
-    inline int getCols() const noexcept { return cols_; }
+    inline int getWidthX() const noexcept { return width_x_; }
+    inline int getHeightY() const noexcept { return height_y_; }
+    inline int getRows() const noexcept { return height_y_; }  // Compatibility
+    inline int getCols() const noexcept { return width_x_; }   // Compatibility
     inline size_t getTotalCells() const noexcept { return total_cells_; }
     inline float getResolution() const noexcept { return resolution_; }
     inline float getGridWidth() const noexcept { return grid_width_; }

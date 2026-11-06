@@ -44,10 +44,10 @@ void ElevationGridMap::initialize()
 
   half_width_ = grid_width_ * 0.5f;
 
-  // Calculate grid cell counts along X (rows) and Y (cols)
-  rows_ = static_cast<int>(std::ceil(grid_length_ / resolution_));
-  cols_ = static_cast<int>(std::ceil(grid_width_ / resolution_));
-  total_cells_ = static_cast<size_t>(rows_ * cols_);
+  // Calculate grid cell counts along X (width_x) and Y (height_y)
+  width_x_ = static_cast<int>(std::ceil(grid_length_ / resolution_));
+  height_y_ = static_cast<int>(std::ceil(grid_width_ / resolution_));
+  total_cells_ = static_cast<size_t>(width_x_ * height_y_);
 
   // One-time contiguous buffer allocation:
   // - min_z_ starts at +infinity so any real sensor point pulls it down
@@ -83,13 +83,13 @@ bool ElevationGridMap::addPoint(float x, float y, float z) noexcept
     return false;
   }
 
-  int row = 0;
-  int col = 0;
-  if (!toGridCoordinates(x, y, row, col)) {
+  int ix = 0;
+  int iy = 0;
+  if (!toGridCoordinates(x, y, ix, iy)) {
     return false;
   }
 
-  const size_t index = toIndex(row, col);
+  const size_t index = toIndex(ix, iy);
 
   // Update min/max elevations without conditional branching
   min_z_[index] = std::min(min_z_[index], z);

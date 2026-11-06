@@ -32,10 +32,12 @@ TraversabilityNode::TraversabilityNode(const rclcpp::NodeOptions & options)
   param_callback_handle_ = this->add_on_set_parameters_callback(
     std::bind(&TraversabilityNode::onParameterChange, this, std::placeholders::_1));
 
-  // 5. Setup ROS 2 Publisher for 2D Traversability OccupancyGrid
+  // 5. Setup ROS 2 Publisher for 2D Traversability OccupancyGrid and Visualization Markers
   // QoS Transient Local / Reliability ensures Nav2 receives costmap cleanly
   occupancy_grid_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(
     map_topic_, rclcpp::QoS(1).reliable());
+  marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>(
+    marker_topic_, rclcpp::QoS(1).reliable());
 
   // 6. Pre-allocate occupancy grid message buffer (Zero dynamic memory allocations at runtime)
   initializeOccupancyGridMessage();
@@ -58,6 +60,7 @@ void TraversabilityNode::declareAndInitializeParameters()
   this->declare_parameter<std::string>("target_frame", target_frame_);
   this->declare_parameter<std::string>("pointcloud_topic", pointcloud_topic_);
   this->declare_parameter<std::string>("map_topic", map_topic_);
+  this->declare_parameter<std::string>("marker_topic", marker_topic_);
 
   this->declare_parameter<float>("grid_width", grid_width_);
   this->declare_parameter<float>("grid_length", grid_length_);
@@ -71,6 +74,7 @@ void TraversabilityNode::declareAndInitializeParameters()
   target_frame_ = this->get_parameter("target_frame").as_string();
   pointcloud_topic_ = this->get_parameter("pointcloud_topic").as_string();
   map_topic_ = this->get_parameter("map_topic").as_string();
+  marker_topic_ = this->get_parameter("marker_topic").as_string();
 
   grid_width_ = static_cast<float>(this->get_parameter("grid_width").as_double());
   grid_length_ = static_cast<float>(this->get_parameter("grid_length").as_double());
@@ -232,9 +236,10 @@ void TraversabilityNode::pointCloudCallback(const sensor_msgs::msg::PointCloud2:
   grid_map_->computeTraversability();
   const auto t_compute_end = std::chrono::steady_clock::now();
 
-  // 6. Construct and publish standard Nav2 OccupancyGrid
+  // 6. Construct and publish standard Nav2 OccupancyGrid & Visualization Markers
   const auto t_pub_start = std::chrono::steady_clock::now();
   publishOccupancyGrid(msg->header);
+  publishTraversabilityMarkers(msg->header);
   const auto t_pub_end = std::chrono::steady_clock::now();
 
   const auto t_frame_end = std::chrono::steady_clock::now();
@@ -285,12 +290,12 @@ void TraversabilityNode::initializeOccupancyGridMessage()
 {
   occupancy_grid_msg_.header.frame_id = target_frame_;
 
-  // Grid Map metadata
+  // Grid Map metadata (ROS REP-103 standard: width is along X-axis, height is along Y-axis)
   occupancy_grid_msg_.info.resolution = grid_map_->getResolution();
-  occupancy_grid_msg_.info.width = static_cast<uint32_t>(grid_map_->getCols());
-  occupancy_grid_msg_.info.height = static_cast<uint32_t>(grid_map_->getRows());
+  occupancy_grid_msg_.info.width = static_cast<uint32_t>(grid_map_->getWidthX());
+  occupancy_grid_msg_.info.height = static_cast<uint32_t>(grid_map_->getHeightY());
 
-  // Set grid origin (cell [0, 0] is forward of base_link from X = 0.0, Y = -half_width_)
+  // Set grid origin (cell [0, 0] is at X = 0.0, Y = -half_width_)
   occupancy_grid_msg_.info.origin.position.x = 0.0;
   occupancy_grid_msg_.info.origin.position.y = -grid_map_->getHalfWidth();
   occupancy_grid_msg_.info.origin.position.z = 0.0;
@@ -310,6 +315,131 @@ void TraversabilityNode::publishOccupancyGrid(const std_msgs::msg::Header & /*he
   std::copy(cost_map.begin(), cost_map.end(), occupancy_grid_msg_.data.begin());
 
   occupancy_grid_pub_->publish(occupancy_grid_msg_);
+}
+
+void TraversabilityNode::publishTraversabilityMarkers(const std_msgs::msg::Header & /*header*/)
+{
+  if (marker_pub_->get_subscription_count() == 0) {
+    return;  // Zero overhead if no RViz client is listening
+  }
+
+  visualization_msgs::msg::MarkerArray marker_array;
+
+  // 1. Grid Boundary Wireframe: Explicitly displays the full 4m x 4m local perception grid
+  visualization_msgs::msg::Marker grid_marker;
+  grid_marker.header.frame_id = target_frame_;
+  // rclcpp::Time(0) locks to latest TF transform, eliminating simulation timestamp jitter / flickering
+  grid_marker.header.stamp = rclcpp::Time(0);
+  grid_marker.ns = "traversability_grid_boundary";
+  grid_marker.id = 1;
+  grid_marker.type = visualization_msgs::msg::Marker::LINE_LIST;
+  grid_marker.action = visualization_msgs::msg::Marker::ADD;
+  grid_marker.lifetime = rclcpp::Duration::from_seconds(0.15);
+  grid_marker.scale.x = 0.015f;  // Line thickness in meters
+  grid_marker.color.r = 0.40f;
+  grid_marker.color.g = 0.65f;
+  grid_marker.color.b = 0.85f;
+  grid_marker.color.a = 0.45f;   // Subtle guide lines
+
+  const float x_max = grid_length_;
+  const float y_min = -grid_map_->getHalfWidth();
+  const float y_max = grid_map_->getHalfWidth();
+  const float z_floor = 0.005f;
+
+  auto add_line = [&](float x1, float y1, float x2, float y2) {
+    geometry_msgs::msg::Point p1, p2;
+    p1.x = x1; p1.y = y1; p1.z = z_floor;
+    p2.x = x2; p2.y = y2; p2.z = z_floor;
+    grid_marker.points.push_back(p1);
+    grid_marker.points.push_back(p2);
+  };
+
+  // Outer 4m x 4m boundary
+  add_line(0.0f, y_min, x_max, y_min);
+  add_line(x_max, y_min, x_max, y_max);
+  add_line(x_max, y_max, 0.0f, y_max);
+  add_line(0.0f, y_max, 0.0f, y_min);
+
+  // Range reference lines (every 1.0m forward)
+  for (float x_tick = 1.0f; x_tick < x_max; x_tick += 1.0f) {
+    add_line(x_tick, y_min, x_tick, y_max);
+  }
+
+  // Lateral center line (heading axis)
+  add_line(0.0f, 0.0f, x_max, 0.0f);
+  // Lateral reference lines (-1m and +1m)
+  add_line(0.0f, -1.0f, x_max, -1.0f);
+  add_line(0.0f,  1.0f, x_max,  1.0f);
+
+  marker_array.markers.push_back(std::move(grid_marker));
+
+  // 2. Traversability Cells: High-performance 3D CUBE_LIST
+  visualization_msgs::msg::Marker cells_marker;
+  cells_marker.header.frame_id = target_frame_;
+  // rclcpp::Time(0) locks to latest TF transform, eliminating simulation timestamp jitter / flickering
+  cells_marker.header.stamp = rclcpp::Time(0);
+  cells_marker.ns = "traversability_cells";
+  cells_marker.id = 0;
+  cells_marker.type = visualization_msgs::msg::Marker::CUBE_LIST;
+  cells_marker.action = visualization_msgs::msg::Marker::ADD;
+  cells_marker.lifetime = rclcpp::Duration::from_seconds(0.15);
+
+  const float res = grid_map_->getResolution();
+  cells_marker.scale.x = res * 0.95f;
+  cells_marker.scale.y = res * 0.95f;
+  cells_marker.scale.z = 0.015f;
+
+  const auto & cost_map = grid_map_->getCostMap();
+  const size_t total = cost_map.size();
+
+  cells_marker.points.reserve(total);
+  cells_marker.colors.reserve(total);
+
+  geometry_msgs::msg::Point pt;
+  std_msgs::msg::ColorRGBA color;
+
+  for (size_t i = 0; i < total; ++i) {
+    const int8_t cost = cost_map[i];
+    if (cost < 0) {
+      continue;  // Unknown cells are not rendered - eliminates background clutter!
+    }
+
+    float cx = 0.0f;
+    float cy = 0.0f;
+    grid_map_->getCellCenter(i, cx, cy);
+
+    pt.x = cx;
+    pt.y = cy;
+
+    if (cost == 0) {
+      // Safe Floor (Cost 0) -> Vivid Green
+      pt.z = 0.01f;
+      color.r = 0.10f;
+      color.g = 0.85f;
+      color.b = 0.20f;
+      color.a = 0.60f;
+    } else if (cost == 100) {
+      // Lethal Obstacle (Cost 100) -> Vivid Red
+      pt.z = 0.06f;
+      color.r = 0.95f;
+      color.g = 0.05f;
+      color.b = 0.05f;
+      color.a = 0.85f;
+    } else {
+      // Risky Slope/Roughness (Cost 1-99) -> Vivid Yellow
+      pt.z = 0.035f;
+      color.r = 0.95f;
+      color.g = 0.85f;
+      color.b = 0.05f;
+      color.a = 0.75f;
+    }
+
+    cells_marker.points.push_back(pt);
+    cells_marker.colors.push_back(color);
+  }
+
+  marker_array.markers.push_back(std::move(cells_marker));
+  marker_pub_->publish(marker_array);
 }
 
 }  // namespace my_traversability
