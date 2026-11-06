@@ -41,11 +41,15 @@ private:
 
   // --- Helpers ---
   void declareAndInitializeParameters();
+  void initializeOccupancyGridMessage();
   void publishOccupancyGrid(const std_msgs::msg::Header & header);
 
   // --- ROS 2 Interfaces ---
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_sub_;
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_grid_pub_;
+
+  // --- Pre-allocated Message Buffer (Zero Heap Allocation at Runtime) ---
+  nav_msgs::msg::OccupancyGrid occupancy_grid_msg_;
 
   // --- Coordinate Transformations (TF2) ---
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;

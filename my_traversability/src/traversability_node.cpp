@@ -37,7 +37,10 @@ TraversabilityNode::TraversabilityNode(const rclcpp::NodeOptions & options)
   occupancy_grid_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(
     map_topic_, rclcpp::QoS(1).reliable());
 
-  // 6. Setup Subscriber to Depth Camera PointCloud
+  // 6. Pre-allocate occupancy grid message buffer (Zero dynamic memory allocations at runtime)
+  initializeOccupancyGridMessage();
+
+  // 7. Setup Subscriber to Depth Camera PointCloud
   // SensorDataQoS uses Best Effort / Volatile for low-latency 30Hz streaming
   pointcloud_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
     pointcloud_topic_,
@@ -128,6 +131,7 @@ rcl_interfaces::msg::SetParametersResult TraversabilityNode::onParameterChange(
       obstacle_threshold_,
       min_z_cutoff_,
       max_z_cutoff_);
+    initializeOccupancyGridMessage();
   }
 
   return result;
@@ -217,29 +221,35 @@ void TraversabilityNode::pointCloudCallback(const sensor_msgs::msg::PointCloud2:
   publishOccupancyGrid(msg->header);
 }
 
-void TraversabilityNode::publishOccupancyGrid(const std_msgs::msg::Header & /*header*/)
+void TraversabilityNode::initializeOccupancyGridMessage()
 {
-  nav_msgs::msg::OccupancyGrid map_msg;
-
-  // Header metadata
-  map_msg.header.stamp = this->now();
-  map_msg.header.frame_id = target_frame_;
+  occupancy_grid_msg_.header.frame_id = target_frame_;
 
   // Grid Map metadata
-  map_msg.info.resolution = grid_map_->getResolution();
-  map_msg.info.width = static_cast<uint32_t>(grid_map_->getCols());
-  map_msg.info.height = static_cast<uint32_t>(grid_map_->getRows());
+  occupancy_grid_msg_.info.resolution = grid_map_->getResolution();
+  occupancy_grid_msg_.info.width = static_cast<uint32_t>(grid_map_->getCols());
+  occupancy_grid_msg_.info.height = static_cast<uint32_t>(grid_map_->getRows());
 
-  // Set grid origin (cell [0, 0] is at X = 0.0, Y = -half_width_)
-  map_msg.info.origin.position.x = 0.0;
-  map_msg.info.origin.position.y = -grid_map_->getHalfWidth();
-  map_msg.info.origin.position.z = 0.0;
-  map_msg.info.origin.orientation.w = 1.0;
+  // Set grid origin (cell [0, 0] is forward of base_link from X = 0.0, Y = -half_width_)
+  occupancy_grid_msg_.info.origin.position.x = 0.0;
+  occupancy_grid_msg_.info.origin.position.y = -grid_map_->getHalfWidth();
+  occupancy_grid_msg_.info.origin.position.z = 0.0;
+  occupancy_grid_msg_.info.origin.orientation.w = 1.0;
 
-  // Direct move/copy of contiguous cost buffer (SoA efficiency)
-  map_msg.data = grid_map_->getCostMap();
+  // Pre-allocate message data buffer once with Nav2 unknown (-1)
+  occupancy_grid_msg_.data.assign(grid_map_->getTotalCells(), static_cast<int8_t>(-1));
+}
 
-  occupancy_grid_pub_->publish(std::move(map_msg));
+void TraversabilityNode::publishOccupancyGrid(const std_msgs::msg::Header & /*header*/)
+{
+  // Update timestamp to current ROS time
+  occupancy_grid_msg_.header.stamp = this->now();
+
+  // Copy contiguous costs directly into pre-allocated message buffer (Zero Heap Allocation)
+  const auto & cost_map = grid_map_->getCostMap();
+  std::copy(cost_map.begin(), cost_map.end(), occupancy_grid_msg_.data.begin());
+
+  occupancy_grid_pub_->publish(occupancy_grid_msg_);
 }
 
 }  // namespace my_traversability
