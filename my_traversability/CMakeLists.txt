@@ -19,9 +19,10 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-# 1. Compile the core C++ logic into a library
+# 1. Core library (Separation of Concerns: Business logic + Node class)
 add_library(my_traversability_core
   src/elevation_grid_map.cpp
+  src/traversability_node.cpp
 )
 
 target_include_directories(my_traversability_core PUBLIC
@@ -30,26 +31,64 @@ target_include_directories(my_traversability_core PUBLIC
 )
 
 ament_target_dependencies(my_traversability_core
+  rclcpp
+  sensor_msgs
+  nav_msgs
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_eigen
   Eigen3
 )
 
-# 2. Testing Configuration
+# 2. Main Executable Entry Point
+add_executable(traversability_node
+  src/main.cpp
+)
+
+target_link_libraries(traversability_node
+  my_traversability_core
+)
+
+ament_target_dependencies(traversability_node
+  rclcpp
+)
+
+# 3. Testing Configuration
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_gtest REQUIRED)
 
-  # Cloud Filter test (Phase 2)
+  # Cloud Filter test
   ament_add_gtest(test_cloud_filter test/test_cloud_filter.cpp)
   target_include_directories(test_cloud_filter PRIVATE include)
   target_link_libraries(test_cloud_filter Eigen3::Eigen)
 
-  # Elevation Grid Map test (Phase 3)
+  # Elevation Grid Map test
   ament_add_gtest(test_elevation_grid_map test/test_elevation_grid_map.cpp)
   target_include_directories(test_elevation_grid_map PRIVATE include)
   target_link_libraries(test_elevation_grid_map my_traversability_core)
+
+  # Traversability Node test (Phase 4 / Issue 4)
+  ament_add_gtest(test_traversability_node test/test_traversability_node.cpp)
+  target_include_directories(test_traversability_node PRIVATE include)
+  target_link_libraries(test_traversability_node my_traversability_core)
 endif()
 
-# Export library so other packages or nodes can link it
+# 4. Install rules for ROS 2 deployment
+install(TARGETS
+  my_traversability_core
+  traversability_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include
+)
+
+# Export library for external downstream nodes
 ament_export_include_directories(include)
 ament_export_libraries(my_traversability_core)
 ament_package()
