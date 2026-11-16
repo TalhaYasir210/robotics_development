@@ -35,11 +35,22 @@ private:
 
     bool initialized_{false};
 
-    // Structure-of-Arrays (SoA) contiguous memory buffers
+    // Structure-of-Arrays (SoA) contiguous memory buffers, alternate method is to use raw pointers
     std::vector<float> min_z_;
     std::vector<float> max_z_;
     std::vector<uint16_t> cell_counts_;
     std::vector<int8_t> cost_map_;
+
+    /*
+    // ==============================================================================
+    // --- INTERVIEW ALTERNATIVE: RAW POINTER BUFFERS (new[] / delete[]) ---
+    // If interviewer asks to remove std::vector, comment the 4 vectors above and uncomment:
+    // float* min_z_{nullptr};
+    // float* max_z_{nullptr};
+    // uint16_t* cell_counts_{nullptr};
+    // int8_t* cost_map_{nullptr};
+    // ==============================================================================
+    */
 
 public:
     // Constructors & Destructor
@@ -52,13 +63,30 @@ public:
         float obstacle_threshold,
         float min_z_cutoff,
         float max_z_cutoff);
-    ~ElevationGridMap() = default;
+    ~ElevationGridMap() = default; //if using raw pointers then create custom destructor
+
+    /*
+    // --- INTERVIEW ALTERNATIVE: RAW POINTER DESTRUCTOR ---
+    // If using raw pointers, replace default destructor with:
+    // ~ElevationGridMap() {
+    //   delete[] min_z_; min_z_ = nullptr;
+    //   delete[] max_z_; max_z_ = nullptr;
+    //   delete[] cell_counts_; cell_counts_ = nullptr;
+    //   delete[] cost_map_; cost_map_ = nullptr;
+    // }
+    */
 
     // Rule of 5: Ban expensive buffer clones, allow cheap moves
     ElevationGridMap(const ElevationGridMap &) = delete;
     ElevationGridMap & operator=(const ElevationGridMap &) = delete;
-    ElevationGridMap(ElevationGridMap &&) noexcept = default;
-    ElevationGridMap & operator=(ElevationGridMap &&) noexcept = default;
+    ElevationGridMap(ElevationGridMap &&) noexcept = default; //if using raw pointers then create custom move constructor
+    ElevationGridMap & operator=(ElevationGridMap &&) noexcept = default; //if using raw pointers then create custom move assignment operator
+
+    /*
+    // --- INTERVIEW ALTERNATIVE: RAW POINTER MOVE CONSTRUCTOR & MOVE ASSIGNMENT ---
+    // ElevationGridMap(ElevationGridMap && other) noexcept;
+    // ElevationGridMap & operator=(ElevationGridMap && other) noexcept;
+    */
 
     // Lifecycle & Processing Pipeline
     void initialize();
@@ -114,6 +142,14 @@ public:
     inline const std::vector<float> & getMinZ() const noexcept { return min_z_; }
     inline const std::vector<float> & getMaxZ() const noexcept { return max_z_; }
     inline const std::vector<uint16_t> & getCellCounts() const noexcept { return cell_counts_; }
+
+    /*
+    // --- INTERVIEW ALTERNATIVE: RAW POINTER GETTERS ---
+    // inline const int8_t* getCostMap() const noexcept { return cost_map_; }
+    // inline const float* getMinZ() const noexcept { return min_z_; }
+    // inline const float* getMaxZ() const noexcept { return max_z_; }
+    // inline const uint16_t* getCellCounts() const noexcept { return cell_counts_; }
+    */
 };
 
 }  // namespace my_traversability
