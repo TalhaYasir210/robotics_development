@@ -35,6 +35,46 @@ ElevationGridMap::ElevationGridMap(
   initialize();
 }
 
+// --- INTERVIEW ALTERNATIVE: RAW POINTER MOVE CONSTRUCTOR & MOVE ASSIGNMENT ---
+// If using raw pointers, uncomment these implementations:
+//
+// ElevationGridMap::ElevationGridMap(ElevationGridMap && other) noexcept
+// : grid_width_(other.grid_width_), grid_length_(other.grid_length_),
+//   resolution_(other.resolution_), half_width_(other.half_width_),
+//   width_x_(other.width_x_), height_y_(other.height_y_),
+//   total_cells_(other.total_cells_), initialized_(other.initialized_),
+//   min_z_(other.min_z_), max_z_(other.max_z_),
+//   cell_counts_(other.cell_counts_), cost_map_(other.cost_map_)
+// {
+//   other.min_z_ = nullptr; other.max_z_ = nullptr;
+//   other.cell_counts_ = nullptr; other.cost_map_ = nullptr;
+//   other.total_cells_ = 0; other.initialized_ = false;
+// }
+//
+// ElevationGridMap & ElevationGridMap::operator=(ElevationGridMap && other) noexcept
+// {
+//   if (this != &other) {
+//     // 1. Free existing memory first to prevent leak!
+//     delete[] min_z_; delete[] max_z_; delete[] cell_counts_; delete[] cost_map_;
+//
+//     // 2. Steal pointers
+//     grid_width_ = other.grid_width_; grid_length_ = other.grid_length_;
+//     resolution_ = other.resolution_; half_width_ = other.half_width_;
+//     width_x_ = other.width_x_; height_y_ = other.height_y_;
+//     total_cells_ = other.total_cells_; initialized_ = other.initialized_;
+//     min_z_ = other.min_z_; max_z_ = other.max_z_;
+//     cell_counts_ = other.cell_counts_; cost_map_ = other.cost_map_;
+//
+//     // 3. Nullify source
+//     other.min_z_ = nullptr; other.max_z_ = nullptr;
+//     other.cell_counts_ = nullptr; other.cost_map_ = nullptr;
+//     other.total_cells_ = 0; other.initialized_ = false;
+//   }
+//   return *this;
+// }
+// ==============================================================================
+*/
+
 // 3. initialize(): One-time heap allocation. Pre-sizes all Structure-of-Arrays (SoA) buffers.
 void ElevationGridMap::initialize()
 {
@@ -44,10 +84,10 @@ void ElevationGridMap::initialize()
 
   half_width_ = grid_width_ * 0.5f;
 
-  // Calculate grid cell counts along X (rows) and Y (cols)
-  rows_ = static_cast<int>(std::ceil(grid_length_ / resolution_));
-  cols_ = static_cast<int>(std::ceil(grid_width_ / resolution_));
-  total_cells_ = static_cast<size_t>(rows_ * cols_);
+  // Calculate grid cell counts along X (width_x) and Y (height_y)
+  width_x_ = static_cast<int>(std::ceil(grid_length_ / resolution_));
+  height_y_ = static_cast<int>(std::ceil(grid_width_ / resolution_));
+  total_cells_ = static_cast<size_t>(width_x_ * height_y_);
 
   // One-time contiguous buffer allocation:
   // - min_z_ starts at +infinity so any real sensor point pulls it down
@@ -58,6 +98,22 @@ void ElevationGridMap::initialize()
   max_z_.assign(total_cells_, -std::numeric_limits<float>::infinity());
   cell_counts_.assign(total_cells_, 0U);
   cost_map_.assign(total_cells_, static_cast<int8_t>(-1));
+
+  /*
+  // ==============================================================================
+  // --- INTERVIEW ALTERNATIVE: RAW POINTER HEAP ALLOCATION (new[]) ---
+  // If using raw pointers, comment out the 4 .assign() lines above and uncomment:
+  // delete[] min_z_; delete[] max_z_; delete[] cell_counts_; delete[] cost_map_;
+  // min_z_ = new float[total_cells_];
+  // max_z_ = new float[total_cells_];
+  // cell_counts_ = new uint16_t[total_cells_];
+  // cost_map_ = new int8_t[total_cells_];
+  // std::fill(min_z_, min_z_ + total_cells_, std::numeric_limits<float>::infinity());
+  // std::fill(max_z_, max_z_ + total_cells_, -std::numeric_limits<float>::infinity());
+  // std::fill(cell_counts_, cell_counts_ + total_cells_, static_cast<uint16_t>(0));
+  // std::fill(cost_map_, cost_map_ + total_cells_, static_cast<int8_t>(-1));
+  // ==============================================================================
+  */
 
   initialized_ = true;
 }
@@ -73,6 +129,17 @@ void ElevationGridMap::reset() noexcept
   std::fill(max_z_.begin(), max_z_.end(), -std::numeric_limits<float>::infinity());
   std::fill(cell_counts_.begin(), cell_counts_.end(), static_cast<uint16_t>(0));
   std::fill(cost_map_.begin(), cost_map_.end(), static_cast<int8_t>(-1));
+
+  /*
+  // ==============================================================================
+  // --- INTERVIEW ALTERNATIVE: RAW POINTER BUFFER RESET ---
+  // If using raw pointers, replace the 4 std::fill(begin, end) lines above with:
+  // std::fill(min_z_, min_z_ + total_cells_, std::numeric_limits<float>::infinity());
+  // std::fill(max_z_, max_z_ + total_cells_, -std::numeric_limits<float>::infinity());
+  // std::fill(cell_counts_, cell_counts_ + total_cells_, static_cast<uint16_t>(0));
+  // std::fill(cost_map_, cost_map_ + total_cells_, static_cast<int8_t>(-1));
+  // ==============================================================================
+  */
 }
 
 // 5. addPoint(): Converts metric point into grid index and updates elevation bounds in-place
@@ -83,13 +150,13 @@ bool ElevationGridMap::addPoint(float x, float y, float z) noexcept
     return false;
   }
 
-  int row = 0;
-  int col = 0;
-  if (!toGridCoordinates(x, y, row, col)) {
+  int ix = 0;
+  int iy = 0;
+  if (!toGridCoordinates(x, y, ix, iy)) {
     return false;
   }
 
-  const size_t index = toIndex(row, col);
+  const size_t index = toIndex(ix, iy);
 
   // Update min/max elevations without conditional branching
   min_z_[index] = std::min(min_z_[index], z);

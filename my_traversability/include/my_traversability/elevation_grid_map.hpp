@@ -20,9 +20,11 @@ private:
     float resolution_{0.05f};      // Cell size in meters (5 cm)
     float half_width_{2.0f};
 
-    // Discrete grid geometry
-    int rows_{0};                  // Discretized along X
-    int cols_{0};                  // Discretized along Y
+    // Discrete grid geometry aligned with ROS OccupancyGrid standard:
+    // width_x_  = cells along X-axis (forward)
+    // height_y_ = cells along Y-axis (lateral)
+    int width_x_{0};
+    int height_y_{0};
     size_t total_cells_{0};
 
     // Traversability metric thresholds (meters)
@@ -33,11 +35,22 @@ private:
 
     bool initialized_{false};
 
-    // Structure-of-Arrays (SoA) contiguous memory buffers
+    // Structure-of-Arrays (SoA) contiguous memory buffers, alternate method is to use raw pointers
     std::vector<float> min_z_;
     std::vector<float> max_z_;
     std::vector<uint16_t> cell_counts_;
     std::vector<int8_t> cost_map_;
+
+    /*
+    // ==============================================================================
+    // --- INTERVIEW ALTERNATIVE: RAW POINTER BUFFERS (new[] / delete[]) ---
+    // If interviewer asks to remove std::vector, comment the 4 vectors above and uncomment:
+    // float* min_z_{nullptr};
+    // float* max_z_{nullptr};
+    // uint16_t* cell_counts_{nullptr};
+    // int8_t* cost_map_{nullptr};
+    // ==============================================================================
+    */
 
 public:
     // Constructors & Destructor
@@ -50,13 +63,30 @@ public:
         float obstacle_threshold,
         float min_z_cutoff,
         float max_z_cutoff);
-    ~ElevationGridMap() = default;
+    ~ElevationGridMap() = default; //if using raw pointers then create custom destructor
+
+    /*
+    // --- INTERVIEW ALTERNATIVE: RAW POINTER DESTRUCTOR ---
+    // If using raw pointers, replace default destructor with:
+    // ~ElevationGridMap() {
+    //   delete[] min_z_; min_z_ = nullptr;
+    //   delete[] max_z_; max_z_ = nullptr;
+    //   delete[] cell_counts_; cell_counts_ = nullptr;
+    //   delete[] cost_map_; cost_map_ = nullptr;
+    // }
+    */
 
     // Rule of 5: Ban expensive buffer clones, allow cheap moves
     ElevationGridMap(const ElevationGridMap &) = delete;
     ElevationGridMap & operator=(const ElevationGridMap &) = delete;
-    ElevationGridMap(ElevationGridMap &&) noexcept = default;
-    ElevationGridMap & operator=(ElevationGridMap &&) noexcept = default;
+    ElevationGridMap(ElevationGridMap &&) noexcept = default; //if using raw pointers then create custom move constructor
+    ElevationGridMap & operator=(ElevationGridMap &&) noexcept = default; //if using raw pointers then create custom move assignment operator
+
+    /*
+    // --- INTERVIEW ALTERNATIVE: RAW POINTER MOVE CONSTRUCTOR & MOVE ASSIGNMENT ---
+    // ElevationGridMap(ElevationGridMap && other) noexcept;
+    // ElevationGridMap & operator=(ElevationGridMap && other) noexcept;
+    */
 
     // Lifecycle & Processing Pipeline
     void initialize();
@@ -64,34 +94,44 @@ public:
     bool addPoint(float x, float y, float z) noexcept;
     void computeTraversability() noexcept;
 
-    // Index & Coordinate Helpers
-    inline size_t toIndex(int row, int col) const noexcept
+    // Index & Coordinate Helpers (Standard ROS OccupancyGrid Row-Major: index = iy * width_x + ix)
+    inline size_t toIndex(int ix, int iy) const noexcept
     {
-        return static_cast<size_t>(row * cols_ + col);
+        return static_cast<size_t>(iy * width_x_ + ix);
     }
 
-    inline bool toGridCoordinates(float x, float y, int & row, int & col) const noexcept
+    inline bool toGridCoordinates(float x, float y, int & ix, int & iy) const noexcept
     {
-        // X maps to forward rows [0, grid_length_]
+        // X maps to forward cells [0, grid_length_]
         if (x < 0.0f || x >= grid_length_) {
             return false;
         }
 
-        // Y maps to lateral cols [-half_width_, +half_width_]
+        // Y maps to lateral cells [-half_width_, +half_width_]
         if (y < -half_width_ || y >= half_width_) {
             return false;
         }
 
-        row = static_cast<int>(x / resolution_);
-        col = static_cast<int>((y + half_width_) / resolution_);
+        ix = static_cast<int>(x / resolution_);
+        iy = static_cast<int>((y + half_width_) / resolution_);
 
-        return (row >= 0 && row < rows_ && col >= 0 && col < cols_);
+        return (ix >= 0 && ix < width_x_ && iy >= 0 && iy < height_y_);
+    }
+
+    inline void getCellCenter(size_t index, float & x, float & y) const noexcept
+    {
+        const int ix = static_cast<int>(index % static_cast<size_t>(width_x_));
+        const int iy = static_cast<int>(index / static_cast<size_t>(width_x_));
+        x = (static_cast<float>(ix) + 0.5f) * resolution_;
+        y = -half_width_ + (static_cast<float>(iy) + 0.5f) * resolution_;
     }
 
     // Getters for ROS Node Publishing and Testing
     inline bool isInitialized() const noexcept { return initialized_; }
-    inline int getRows() const noexcept { return rows_; }
-    inline int getCols() const noexcept { return cols_; }
+    inline int getWidthX() const noexcept { return width_x_; }
+    inline int getHeightY() const noexcept { return height_y_; }
+    inline int getRows() const noexcept { return height_y_; }  // Compatibility
+    inline int getCols() const noexcept { return width_x_; }   // Compatibility
     inline size_t getTotalCells() const noexcept { return total_cells_; }
     inline float getResolution() const noexcept { return resolution_; }
     inline float getGridWidth() const noexcept { return grid_width_; }
@@ -102,6 +142,14 @@ public:
     inline const std::vector<float> & getMinZ() const noexcept { return min_z_; }
     inline const std::vector<float> & getMaxZ() const noexcept { return max_z_; }
     inline const std::vector<uint16_t> & getCellCounts() const noexcept { return cell_counts_; }
+
+    /*
+    // --- INTERVIEW ALTERNATIVE: RAW POINTER GETTERS ---
+    // inline const int8_t* getCostMap() const noexcept { return cost_map_; }
+    // inline const float* getMinZ() const noexcept { return min_z_; }
+    // inline const float* getMaxZ() const noexcept { return max_z_; }
+    // inline const uint16_t* getCellCounts() const noexcept { return cell_counts_; }
+    */
 };
 
 }  // namespace my_traversability

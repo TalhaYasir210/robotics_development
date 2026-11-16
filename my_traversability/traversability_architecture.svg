@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1350 320" width="1350" height="320" style="background:#ffffff; font-family:'Segoe UI',system-ui,sans-serif;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#2b8a3e"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <style>
+    .box { rx: 10px; ry: 10px; stroke-width: 2px; filter: url(#shadow); }
+    .title { font-weight: 700; font-size: 14px; text-anchor: middle; }
+    .sub { font-size: 12px; fill: #495057; text-anchor: middle; }
+    .line { stroke: #2b8a3e; stroke-width: 2.5px; fill: none; marker-end: url(#arrow); }
+  </style>
+
+  <!-- Node 1: Depth Camera -->
+  <rect x="30" y="40" width="180" height="75" fill="#e7f5ff" stroke="#1971c2" class="box"/>
+  <text x="120" y="72" fill="#1864ab" class="title">Depth Camera</text>
+  <text x="120" y="94" class="sub">30 Hz PointCloud2</text>
+
+  <!-- Node 2: TF2 -->
+  <rect x="30" y="165" width="180" height="75" fill="#f8f9fa" stroke="#495057" class="box"/>
+  <text x="120" y="197" fill="#212529" class="title">TF2 Buffer</text>
+  <text x="120" y="219" class="sub">camera → base_link</text>
+
+  <!-- Node 3: TraversabilityNode -->
+  <rect x="260" y="95" width="200" height="90" fill="#fff9db" stroke="#f59f00" class="box"/>
+  <text x="360" y="132" fill="#e67700" class="title">TraversabilityNode</text>
+  <text x="360" y="154" class="sub">Zero-Copy Ingestion</text>
+  <text x="360" y="171" class="sub">&amp; Profiling Orchestrator</text>
+
+  <!-- Node 4: CloudFilter -->
+  <rect x="510" y="95" width="180" height="90" fill="#f3f0ff" stroke="#7950f2" class="box"/>
+  <text x="600" y="132" fill="#5f3dc4" class="title">CloudFilter</text>
+  <text x="600" y="154" class="sub">NaN Rejection &amp; SIMD</text>
+  <text x="600" y="171" class="sub">Rigid Transform</text>
+
+  <!-- Node 5: ElevationGridMap -->
+  <rect x="740" y="95" width="200" height="90" fill="#e6fcf5" stroke="#0ca678" class="box"/>
+  <text x="840" y="132" fill="#087f5b" class="title">ElevationGridMap</text>
+  <text x="840" y="154" class="sub">4m × 4m Grid (80×80)</text>
+  <text x="840" y="171" class="sub">In-Place std::fill Buffers</text>
+
+  <!-- Node 6: Cost Evaluation -->
+  <rect x="990" y="95" width="170" height="90" fill="#ffe3e3" stroke="#fa5252" class="box"/>
+  <text x="1075" y="132" fill="#c92a2a" class="title">Cost Evaluation</text>
+  <text x="1075" y="154" class="sub">ΔZ: 0=Safe, 1-99=Rough</text>
+  <text x="1075" y="171" class="sub">100=Obstacle</text>
+
+  <!-- Node 7: Nav2 Map -->
+  <rect x="1190" y="40" width="150" height="75" fill="#e7f5ff" stroke="#1971c2" class="box"/>
+  <text x="1265" y="72" fill="#1864ab" class="title">Nav2 Costmap</text>
+  <text x="1265" y="94" class="sub">/traversability_map</text>
+
+  <!-- Node 8: RViz Visualizer -->
+  <rect x="1190" y="165" width="150" height="75" fill="#ebfbee" stroke="#2b8a3e" class="box"/>
+  <text x="1265" y="197" fill="#2b8a3e" class="title">RViz2 Markers</text>
+  <text x="1265" y="219" class="sub">/traversability_markers</text>
+
+  <!-- Connectors -->
+  <path d="M 210 77 L 235 77 Q 247 77 247 110 L 247 125 L 257 125" class="line"/>
+  <path d="M 210 202 L 235 202 Q 247 202 247 170 L 247 155 L 257 155" class="line"/>
+  <path d="M 460 140 L 507 140" class="line"/>
+  <path d="M 690 140 L 737 140" class="line"/>
+  <path d="M 940 140 L 987 140" class="line"/>
+  <path d="M 1160 125 L 1175 125 Q 1182 125 1182 95 L 1182 77 L 1187 77" class="line"/>
+  <path d="M 1160 155 L 1175 155 Q 1182 155 1182 185 L 1182 202 L 1187 202" class="line"/>
+</svg>
